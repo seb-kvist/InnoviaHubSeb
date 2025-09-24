@@ -1,0 +1,141 @@
+@hostname = localhost
+@port = 5022
+@host = {{hostname}}:{{port}}
+@id= ddeffa2f-da86-441a-932b-e2a3a52ea488
+@usertoken = 
+@admintoken = 
+###
+
+POST http://{{host}}/api/auth/register
+Content-Type: application/json
+
+{
+    "email":"test4@test.com",
+    "password":"test123!",
+    "name":"test4"
+}
+
+
+### Logga in som användare
+POST http://{{host}}/api/auth/login
+Content-Type: application/json
+
+{
+    "email":"admin@example.com",
+    "password":"Admin@123"
+}
+###
+GET http://localhost:5022/api/Resource
+
+
+
+###
+GET  http://localhost:5022/api/booking/date?date=2025-09-01
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjkyYmQ3ZWUxLTdjYTAtNDI2Yy04YzAwLTgwYmJiYWQyZWNhOCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6ImFkbWluQGV4YW1wbGUuY29tIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiYWRtaW4iLCJleHAiOjE3NTc3MjE2MTAsImlzcyI6Imlubm92aWFodWIiLCJhdWQiOiJpbm5vdmlhaHViIn0.w45Axn9ZotKJJ1us-NZMrm1UBMir14ul9_q1HqtYquI
+
+
+
+
+
+
+###
+POST http://localhost:5022/api/booking
+Content-Type: application/json
+
+{
+  "date": "2025-09-30",
+  "timeSlot": "10-12",
+  "resourceTypeId": 1,
+  "userId": "{{id}}"
+}
+
+### Hämta alla bokningar
+GET  http://localhost:5022/api/booking/all
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjkyYmQ3ZWUxLTdjYTAtNDI2Yy04YzAwLTgwYmJiYWQyZWNhOCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6ImFkbWluQGV4YW1wbGUuY29tIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiYWRtaW4iLCJleHAiOjE3NTc3MTg3MjUsImlzcyI6Imlubm92aWFodWIiLCJhdWQiOiJpbm5vdmlhaHViIn0.J7CnvSjw_pVb6ZybD_AA7zbxYrpxRxmAu4IZ1lqO7_w
+
+
+
+### Hämta bokningar för en specifik användare
+GET http://localhost:5022/api/booking/user/{{id}}
+Accept: application/json
+
+
+### Free Slots
+POST http://localhost:5022/api/booking/4/freeslots
+Content-Type: application/json
+Accept: application/json
+
+{
+  "date": "2025-09-01"
+}
+
+
+### hämta bokningar för en resours type
+POST  http://localhost:5022/api/booking/1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjkyYmQ3ZWUxLTdjYTAtNDI2Yy04YzAwLTgwYmJiYWQyZWNhOCIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6ImFkbWluQGV4YW1wbGUuY29tIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiYWRtaW4iLCJleHAiOjE3NTc0NjIyNzIsImlzcyI6Imlubm92aWFodWIiLCJhdWQiOiJpbm5vdmlhaHViIn0.rwPDL0TbIHrIXQFjaSdwZOrXxm8lSk7eURR42-upXxQ
+
+{
+  "date": "2025-09-05"
+}
+
+
+
+
+### change status
+PATCH  http://localhost:5022/api/booking/resource/20
+Content-Type: application/json
+
+
+
+
+### Hämta alla användare
+GET http://localhost:5022/api/users
+Accept: application/json
+
+
+### Hämta en specifik användare
+GET http://localhost:5022/api/users/{{id}}
+Accept: application/json
+
+
+### Uppdatera en användare
+PUT http://localhost:5022/api/users/{{id}}
+Content-Type: application/json
+
+{
+  "email": "nyemailviatest@mail.com",
+  "name": "NyttNamnviatest"
+}
+
+
+
+### Ta bort en användare
+DELETE http://localhost:5022/api/users/system-user-id
+=======
+DELETE http://localhost:5022/api/booking/12
+Accept: application/json
+
+### Hämta alla användare
+GET http://localhost:5022/api/users
+Accept: application/json
+
+
+### Hämta en specifik användare
+GET http://localhost:5022/api/users/01d5c033-a326-4106-9db3-e6fb34972b18
+Accept: application/json
+
+
+### Uppdatera en användare
+PUT http://localhost:5022/api/users/01d5c033-a326-4106-9db3-e6fb34972b18
+Content-Type: application/json
+
+{
+  "email": "nyemailviatest@mail.com",
+  "name": "NyttNamnviatest"
+}
+
+
+### Ta bort en användare
+DELETE http://localhost:5022/api/users/01d5c033-a326-4106-9db3-e6fb34972b18
+
