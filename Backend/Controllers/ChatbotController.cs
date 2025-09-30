@@ -14,9 +14,11 @@ namespace Backend.Controllers
             _chatbotService = chatbotService;
         }
 
+        // Enkla request/response‑typer för chat‑API:t
         public record AskRequest(string question);
         public record AskResponse(string answer);
 
+        // POST /api/chatbot/ask – tar emot en fråga och returnerar svar
         [HttpPost("ask")]
         public async Task<ActionResult<AskResponse>> Ask([FromBody] AskRequest req)
         {

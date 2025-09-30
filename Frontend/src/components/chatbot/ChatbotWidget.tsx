@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
+import "./ChatbotWidget.css";
 
 type Message = { id: string; role: "user" | "assistant"; content: string };
 
@@ -8,6 +9,7 @@ const ChatbotWidget: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
+  const listRef = useRef<HTMLDivElement | null>(null);
 
   const api = useMemo(() => {
     const base = import.meta.env.VITE_API_URL as string;
@@ -47,105 +49,42 @@ const ChatbotWidget: React.FC = () => {
     }
   };
 
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    const el = listRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [messages, loading, open]);
+
   return (
     <>
       {/* Floating Button */}
       <button
         onClick={() => setOpen((v) => !v)}
-        style={{
-          position: "fixed",
-          right: 20,
-          bottom: 20,
-          width: 56,
-          height: 56,
-          borderRadius: 28,
-          background: "#22c55e",
-          color: "white",
-          border: "none",
-          boxShadow: "0 6px 20px rgba(0,0,0,0.2)",
-          cursor: "pointer",
-          zIndex: 9999,
-        }}
+        className="chatbot-launcher"
         aria-label="Open chatbot"
       >
-        💬
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M7 7h10M7 11h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          <path d="M4 5a3 3 0 013-3h10a3 3 0 013 3v8a3 3 0 01-3 3H9l-4 4v-4H7a3 3 0 01-3-3V5z" stroke="currentColor" strokeWidth="2" fill="none" strokeLinejoin="round"/>
+        </svg>
       </button>
 
       {/* Chat Panel */}
       {open && (
-        <div
-          style={{
-            position: "fixed",
-            right: 20,
-            bottom: 84,
-            width: 380,
-            maxHeight: 560,
-            background: "white",
-            borderRadius: 18,
-            boxShadow: "0 24px 60px rgba(0,0,0,0.25)",
-            display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
-            zIndex: 9999,
-          }}
-        >
+        <div className="chatbot-panel">
           {/* Header */}
-          <div
-            style={{
-              padding: "14px 16px 10px 16px",
-              background: "#3b82f6",
-              color: "white",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 18,
-                  background: "#22c55e",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 18,
-                }}
-              >
-                🙂
-              </div>
-              <div style={{ fontSize: 18, fontWeight: 700 }}>Innovia AI</div>
+          <div className="chatbot-header">
+            <div className="chatbot-header-row">
+              <div className="chatbot-title">Innovia AI</div>
             </div>
-            <div style={{ fontSize: 13, opacity: 0.95, marginTop: 4 }}>
-              Hur kan jag hjälpa dig?
-            </div>
+            <div className="chatbot-subtitle">Hur kan jag hjälpa dig?</div>
           </div>
-          <div
-            style={{
-              padding: 16,
-              display: "flex",
-              flexDirection: "column",
-              gap: 10,
-              overflowY: "auto",
-              minHeight: 220,
-              maxHeight: 400,
-              background: "#f2f3f5", // slightly more grey background
-            }}
-          >
+          <div className="chatbot-body" ref={listRef}>
             {messages.map((m) => (
               <div
                 key={m.id}
-                style={{
-                  alignSelf: m.role === "user" ? "flex-start" : "flex-end",
-                  background: m.role === "user" ? "#ffffff" : "#14b8a6", // user white, bot teal
-                  color: m.role === "user" ? "#111827" : "#ffffff",
-                  padding: "12px 14px",
-                  borderRadius: 14,
-                  maxWidth: "85%",
-                  whiteSpace: "pre-wrap",
-                  boxShadow:
-                    m.role === "user"
-                      ? "0 1px 0 rgba(0,0,0,0.06) inset"
-                      : "0 8px 18px rgba(0,0,0,0.12)",
-                }}
+                className={`chatbot-bubble ${m.role === "user" ? "user" : "bot"}`}
               >
                 {m.content}
               </div>
@@ -154,16 +93,7 @@ const ChatbotWidget: React.FC = () => {
               <div style={{ color: "#6b7280", fontSize: 12 }}>Skriver…</div>
             )}
           </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              padding: 14,
-              borderTop: "1px solid #e5e7eb",
-              background: "#ffffff",
-            }}
-          >
+          <div className="chatbot-input-row">
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -174,33 +104,17 @@ const ChatbotWidget: React.FC = () => {
                 }
               }}
               placeholder="Skriv ett meddelande…"
-              style={{
-                flex: 1,
-                border: "none",
-                outline: "none",
-                background: "#f3f4f6",
-                borderRadius: 20,
-                padding: "12px 14px",
-              }}
+              className="chatbot-input"
             />
             <button
               onClick={sendMessage}
               disabled={loading}
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 22,
-                border: "none",
-                background: "#0ea5e9",
-                color: "#ffffff",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                boxShadow: "0 8px 16px rgba(14,165,233,0.35)",
-              }}
+              className="chatbot-send"
             >
-              ✈️
+              {/* paper-plane send icon */}
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M3.4 2.6l17.7 8a1 1 0 010 1.8L3.4 21.4a1 1 0 01-1.3-1.3l3.2-7.5a1 1 0 010-.7L2.1 3.9A1 1 0 013.4 2.6z" fill="currentColor"/>
+              </svg>
             </button>
           </div>
         </div>

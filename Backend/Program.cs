@@ -83,6 +83,7 @@ builder.Services.AddHttpClient("openai", client =>
     }
     client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
 });
+builder.Services.AddSingleton<KnowledgeService>();
 builder.Services.AddSingleton<ChatbotService>();
 builder.Services.AddCors(options =>
     {

@@ -6,25 +6,54 @@ using System.Threading.Tasks;
 
 namespace Backend.Services
 {
+    /// <summary>
+    /// Anropar OpenAI och berikar prompten med lokal kunskap (RAG) från
+    /// KnowledgeService så att svaren blir app‑specifika.
+    /// </summary>
     public class ChatbotService
     {
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly KnowledgeService _knowledge;
 
-        public ChatbotService(IHttpClientFactory httpClientFactory)
+        public ChatbotService(IHttpClientFactory httpClientFactory, KnowledgeService knowledge)
         {
             _httpClientFactory = httpClientFactory;
+            _knowledge = knowledge;
         }
 
+        /// <summary>
+        /// Ställer en fråga till OpenAI med valfri systemprompt.
+        /// Lägger in RAG‑utdrag från KnowledgeService för att grunda svaren
+        /// i Innovia Hub.
+        /// </summary>
         public async Task<string> AskAsync(string userMessage, string? systemPrompt = null)
         {
             var http = _httpClientFactory.CreateClient("openai");
+
+            // Retrieve small context snippets using simple keyword search
+            var hits = _knowledge.Search(userMessage, maxResults: 5);
+            var context = KnowledgeService.BuildContext(hits);
+            if (string.IsNullOrWhiteSpace(context))
+            {
+                // Fallback minimal guide so svar blir app-specifikt
+                context = "[FILE: fallback.md]\nBoka i Innovia Hub: Gå till Resources → välj resurstyp → datum → ledig tid → Boka. Avboka i Profile. Admin hanterar resurser och användare.\n";
+            }
+
+            var guidance = systemPrompt ??
+                "Du är Innovia AI för Innovia Hub – en glad, vänlig och hjälpsam assistent.\n" +
+                "Svara kort på svenska, med positiv ton.\n" +
+                "- Om frågan handlar om Innovia Hub (navigation, bokning, sidor): använd KONTEXT och ge konkreta klick-steg med sidnamn (Resources, Profile, Admin).\n" +
+                "- Om frågan är allmän (t.ex. matte, normal fakta): svara normalt utan kontext.\n" +
+                "- Om app-specifik information saknas i KONTEXT: säg kort att du inte vet istället för att gissa.\n" +
+                "Avsluta ibland, men inte alltid, med en kort följdfråga i samma ton. Växla mellan bara svar och svar + följdfråga, så konversationen känns naturlig.";
 
             var payload = new
             {
                 model = "gpt-4o-mini",
                 messages = new object[]
                 {
-                    new { role = "system", content = systemPrompt ?? "You are Innovia AI. Be concise and helpful." },
+                    new { role = "system", content = guidance },
+                    new { role = "system", content = "KONTEXT:\n" + context },
                     new { role = "user", content = userMessage }
                 }
             };
