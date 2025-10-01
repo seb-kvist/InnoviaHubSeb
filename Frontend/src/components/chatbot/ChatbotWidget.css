@@ -11,6 +11,15 @@
 	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 	cursor: pointer;
 	z-index: 9999;
+	display: flex; /* centrera ikon/bild */
+	align-items: center;
+	justify-content: center;
+}
+
+.chatbot-icon {
+	width: 46px;
+	height: 46px;
+	object-fit: contain;
 }
 
 .chatbot-panel {
@@ -69,6 +78,10 @@
 	scrollbar-color: #e5e7eb #ffffff; /* thumb track for Firefox */
 	scrollbar-width: thin;
 }
+.chatbot-typing {
+	color: #6b7280;
+	font-size: 12px;
+}
 
 /* WebKit-based browsers */
 .chatbot-body::-webkit-scrollbar {
@@ -84,26 +97,49 @@
 	border: 2px solid #ffffff;
 }
 
+.chatbot-row {
+	display: flex;
+	width: 100%;
+}
+.chatbot-row.user {
+	justify-content: flex-start; /* användare vänster */
+}
+.chatbot-row.bot {
+	justify-content: flex-end; /* bot höger */
+}
+
 .chatbot-bubble {
 	padding: 12px 14px;
 	border-radius: 14px;
 	max-width: 85%;
+	display: inline-block; /* bubblan växer med innehållet */
+	width: -moz-fit-content;
+	width: fit-content; /* inte större än nödvändigt */
 	white-space: pre-wrap;
+	text-align: left; /* texten i bubblor ska alltid vara vänsterställd */
 }
 
 .chatbot-bubble.user {
-	align-self: flex-start;
+	/* placeras via .chatbot-row.user */
 	background: #ffffff;
 	color: #111827;
 	box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06) inset;
 }
 
 .chatbot-bubble.bot {
-	align-self: flex-end;
+	/* placeras via .chatbot-row.bot */
 	background: #14b8a6;
 	color: #ffffff;
 	box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
 }
+
+.chatbot-ts {
+	font-size: 11px;
+	color: #9ca3af;
+	margin-top: 4px;
+}
+.chatbot-ts.user { text-align: left; }
+.chatbot-ts.bot { text-align: right; }
 
 .chatbot-input-row {
 	display: flex;
@@ -145,3 +181,15 @@
 	cursor: pointer;
 	box-shadow: 0 8px 16px rgba(14, 165, 233, 0.35);
 }
+
+.chatbot-icon {
+	width: 33px;
+	height: 33px;
+	object-fit: contain;
+  }
+
+  .send-icon {
+	width: 20px;
+	height: 20px;
+	object-fit: contain;
+  }
