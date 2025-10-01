@@ -71,7 +71,10 @@ const ChatbotWidget: React.FC = () => {
 
   return (
     <>
-      {/* Floating Button */}
+      {/* Floating Button + Hälsning */}
+      {!open && (
+        <div className="chatbot-greeting">Hej! Kan jag hjälpa dig?</div>
+      )}
       <button
         onClick={() => setOpen((v) => !v)}
         className="chatbot-launcher"
@@ -86,7 +89,10 @@ const ChatbotWidget: React.FC = () => {
           {/* Header */}
           <div className="chatbot-header">
             <div className="chatbot-header-row">
-              <div className="chatbot-title">Innovia AI</div>
+              <div className="chatbot-header-left">
+                <img src="/img/robot.svg" className="chatbot-header-icon" alt="Toshi" />
+                <div className="chatbot-title">Toshi: The Innovia Hub Assistant</div>
+              </div>
             </div>
             <div className="chatbot-subtitle">Hur kan jag hjälpa dig?</div>
           </div>
