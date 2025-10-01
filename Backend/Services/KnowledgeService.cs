@@ -15,6 +15,7 @@ namespace Backend.Services
         {
             // Hitta en stabil sökväg till "Backend/Knowledge" oavsett om dotnet
             // körs från projektroten eller direkt i Backend‑katalogen.
+            // Detta gör att vi kan lägga .md‑filerna där och läsa dem utan extra konfig.
             var cwd = Directory.GetCurrentDirectory();
             var backendPath = Directory.Exists(Path.Combine(cwd, "Backend")) ? Path.Combine(cwd, "Backend") : cwd;
             _knowledgeRoot = Path.Combine(backendPath, "Knowledge");
@@ -31,6 +32,8 @@ namespace Backend.Services
             var results = new List<(string file, string snippet, int score)>();
             if (string.IsNullOrWhiteSpace(query)) return results;
 
+            // Gå igenom alla .md‑filer och beräkna en enkel poäng baserat på
+            // hur många gånger termerna förekommer (termfrekvens).
             foreach (var file in Directory.EnumerateFiles(_knowledgeRoot, "*.md", SearchOption.AllDirectories))
             {
                 var text = File.ReadAllText(file);
@@ -39,6 +42,7 @@ namespace Backend.Services
                 var score = terms.Sum(t => CountOccurrences(lower, t));
                 if (score <= 0) continue;
 
+                // Ta ut ett kort utdrag kring första termen för att hålla prompten liten
                 var snippet = ExtractSnippet(text, terms.First());
                 results.Add((Path.GetFileName(file), snippet, score));
             }

@@ -21,10 +21,10 @@ using Backend.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Load environment variables from .env. Support both root-run and Backend-run.
-// 1) Try current working directory
+// Läs in miljövariabler från .env. Stöd både körning från projektroten och Backend‑mappen.
+// 1) Försök med aktuell arbetskatalog
 Env.Load();
-// 2) Try Backend/.env if not found
+// 2) Testa Backend/.env om nyckeln inte hittas
 if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("OPENAI_API_KEY")))
 {
     var backendEnvPath = Path.Combine(Directory.GetCurrentDirectory(), "Backend", ".env");
@@ -72,7 +72,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
     options.UseMySql(cs, ServerVersion.AutoDetect(cs));
 });
-// Chatbot service
+// Chatbot‑tjänster
 builder.Services.AddHttpClient("openai", client =>
 {
     client.BaseAddress = new Uri("https://api.openai.com/");
@@ -83,6 +83,7 @@ builder.Services.AddHttpClient("openai", client =>
     }
     client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
 });
+// KnowledgeService läser .md‑filer; ChatbotService anropar OpenAI och injicerar KONTEXT
 builder.Services.AddSingleton<KnowledgeService>();
 builder.Services.AddSingleton<ChatbotService>();
 builder.Services.AddCors(options =>

@@ -28,6 +28,8 @@ namespace Backend.Services
         /// </summary>
         public async Task<string> AskAsync(string userMessage, string? systemPrompt = null)
         {
+            // Namngiven HttpClient ("openai") skapas i Program.cs och har rätt basadress
+            // samt Authorization‑header (läser OPENAI_API_KEY från .env).
             var http = _httpClientFactory.CreateClient("openai");
 
             // Retrieve small context snippets using simple keyword search
@@ -42,9 +44,10 @@ namespace Backend.Services
             var guidance = systemPrompt ??
                 "Du är Innovia AI för Innovia Hub – en glad, vänlig och hjälpsam assistent.\n" +
                 "Svara kort på svenska, med positiv ton.\n" +
-                "- Om frågan handlar om Innovia Hub (navigation, bokning, sidor): använd KONTEXT och ge konkreta klick-steg med sidnamn (Resources, Profile, Admin).\n" +
-                "- Om frågan är allmän (t.ex. matte, normal fakta): svara normalt utan kontext.\n" +
-                "- Om app-specifik information saknas i KONTEXT: säg kort att du inte vet istället för att gissa.\n" +
+                "- Du får ENDAST svara på frågor som rör Innovia Hub (appens navigation, bokningar, sidor, roller m.m.).\n" +
+                "- Om frågan INTE rör Innovia Hub: svara artigt att du bara hjälper till med Innovia Hub och be om en app‑relaterad fråga.\n" +
+                "- Om frågan rör Innovia Hub: använd KONTEXT och ge konkreta klick‑steg med sidnamn (Resources, Profile, Admin).\n" +
+                "- Om app‑specifik information saknas i KONTEXT: säg kort att du inte vet istället för att gissa.\n" +
                 "Avsluta ibland, men inte alltid, med en kort följdfråga i samma ton. Växla mellan bara svar och svar + följdfråga, så konversationen känns naturlig.";
 
             var payload = new

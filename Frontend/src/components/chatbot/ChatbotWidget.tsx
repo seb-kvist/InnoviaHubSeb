@@ -1,3 +1,10 @@
+// ChatbotWidget
+// Komponent för en flytande chattknapp och ett chatfönster i appen.
+// - Visar en launcher nere till höger som öppnar/stänger chatten
+// - Renderar användar- och bot‑meddelanden (vänster/höger)
+// - Anropar backend‑endpointen /api/chatbot/ask med frågan
+// - Auto‑scrollar ned till senaste meddelandet
+// - Styling ligger i ChatbotWidget.css
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import "./ChatbotWidget.css";
@@ -6,16 +13,19 @@ type Message = { id: string; role: "user" | "assistant"; content: string };
 
 const ChatbotWidget: React.FC = () => {
   const [open, setOpen] = useState<boolean>(false);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
+  // Lokal UI‑state för chatt
+  const [messages, setMessages] = useState<Message[]>([]); // meddelandelista
+  const [input, setInput] = useState<string>(""); // inmatningstext
+  const [loading, setLoading] = useState<boolean>(false); // laddstatus när vi väntar på svar
   const listRef = useRef<HTMLDivElement | null>(null);
 
+  // Axios‑instans mot backend API (baseras på VITE_API_URL)
   const api = useMemo(() => {
     const base = import.meta.env.VITE_API_URL as string;
     return axios.create({ baseURL: base });
   }, []);
 
+  // Skickar användarens fråga till backend och lägger till bot‑svar i listan
   const sendMessage = async () => {
     const trimmed = input.trim();
     if (!trimmed) return;
@@ -49,7 +59,7 @@ const ChatbotWidget: React.FC = () => {
     }
   };
 
-  // Auto-scroll to bottom when messages change
+  // Auto‑scrolla ned till senaste meddelandet när listan uppdateras eller panelen öppnas
   useEffect(() => {
     const el = listRef.current;
     if (!el) return;
