@@ -29,12 +29,12 @@ namespace Backend.Services
 
             //Standard-prompt som styr hur chatbotten ska bete sig
             var guidance = systemPrompt ??
-                "Du är Innovia AI för Innovia Hub – en glad, vänlig och hjälpsam assistent.\n" +
+                "Du är Innovia AI för Innovia Hub - en glad, vänlig och hjälpsam assistent.\n" +
                 "Svara kort på svenska, med positiv ton.\n" +
                 "- Du får ENDAST svara på frågor som rör Innovia Hub (appens navigation, bokningar, sidor, roller m.m.).\n" +
-                "- Om frågan INTE rör Innovia Hub: svara artigt att du bara hjälper till med Innovia Hub och be om en app‑relaterad fråga.\n" +
-                "- Om frågan rör Innovia Hub: använd KONTEXT och ge konkreta klick‑steg med sidnamn (Resources, Profile, Admin).\n" +
-                "- Om app‑specifik information saknas i KONTEXT: säg kort att du inte vet istället för att gissa.\n" +
+                "- Om frågan INTE rör Innovia Hub: svara artigt att du bara hjälper till med Innovia Hub och be om en app-relaterad fråga.\n" +
+                "- Om frågan rör Innovia Hub: använd KONTEXT och ge konkreta klick-steg med sidnamn (Resources, Profile, Admin).\n" +
+                "- Om app-specifik information saknas i KONTEXT: säg kort att du inte vet istället för att gissa.\n" +
                 "Avsluta ibland, men inte alltid, med en kort följdfråga i samma ton. Växla mellan bara svar och svar + följdfråga, så konversationen känns naturlig.";
 
             // Skapar payload till OpenAI beroende på om kontext finns
@@ -42,11 +42,15 @@ namespace Backend.Services
             {
                 model = "gpt-4o-mini",
                 messages = string.IsNullOrWhiteSpace(context)
+
+                    //Om Ingen kontext finns
                     ? new object[]
                     {
                         new { role = "system", content = guidance },
                         new { role = "user", content = userMessage }
                     }
+
+                    // Om Kontext finns
                     : new object[]
                     {
                         new { role = "system", content = guidance },
