@@ -6,10 +6,7 @@ using System.Threading.Tasks;
 
 namespace Backend.Services
 {
-    /// <summary>
-    /// Anropar OpenAI och berikar prompten med lokal kunskap (RAG) från
-    /// KnowledgeService så att svaren blir app‑specifika.
-    /// </summary>
+    // Hanterar kontakt med OpenAI och kombinerar svar med RAG via KnowledgeService. Används för att ge app-specifika svar till Innovia Hub.
     public class ChatbotService
     {
         private readonly IHttpClientFactory _httpClientFactory;
@@ -21,26 +18,16 @@ namespace Backend.Services
             _knowledge = knowledge;
         }
 
-        /// <summary>
-        /// Ställer en fråga till OpenAI med valfri systemprompt.
-        /// Lägger in RAG‑utdrag från KnowledgeService för att grunda svaren
-        /// i Innovia Hub.
-        /// </summary>
+        // Skickar en fråga till OpenAI. Läser relevant kontext från KnowledgeService (RAG) och lägger till den i prompten. Om ingen kontext hittas skickas bara användarens fråga.
         public async Task<string> AskAsync(string userMessage, string? systemPrompt = null)
         {
-            // Namngiven HttpClient ("openai") skapas i Program.cs och har rätt basadress
-            // samt Authorization‑header (läser OPENAI_API_KEY från .env).
             var http = _httpClientFactory.CreateClient("openai");
 
-            // Retrieve small context snippets using simple keyword search
+            // Söker upp relaterad info från knowledge-filerna
             var hits = _knowledge.Search(userMessage, maxResults: 5);
-            var context = KnowledgeService.BuildContext(hits);
-            if (string.IsNullOrWhiteSpace(context))
-            {
-                // Fallback minimal guide so svar blir app-specifikt
-                context = "[FILE: fallback.md]\nBoka i Innovia Hub: Gå till Resources → välj resurstyp → datum → ledig tid → Boka. Avboka i Profile. Admin hanterar resurser och användare.\n";
-            }
+            var context = KnowledgeService.BuildContext(hits) ?? string.Empty;
 
+            //Standard-prompt som styr hur chatbotten ska bete sig
             var guidance = systemPrompt ??
                 "Du är Innovia AI för Innovia Hub – en glad, vänlig och hjälpsam assistent.\n" +
                 "Svara kort på svenska, med positiv ton.\n" +
@@ -50,15 +37,22 @@ namespace Backend.Services
                 "- Om app‑specifik information saknas i KONTEXT: säg kort att du inte vet istället för att gissa.\n" +
                 "Avsluta ibland, men inte alltid, med en kort följdfråga i samma ton. Växla mellan bara svar och svar + följdfråga, så konversationen känns naturlig.";
 
+            // Skapar payload till OpenAI beroende på om kontext finns
             var payload = new
             {
                 model = "gpt-4o-mini",
-                messages = new object[]
-                {
-                    new { role = "system", content = guidance },
-                    new { role = "system", content = "KONTEXT:\n" + context },
-                    new { role = "user", content = userMessage }
-                }
+                messages = string.IsNullOrWhiteSpace(context)
+                    ? new object[]
+                    {
+                        new { role = "system", content = guidance },
+                        new { role = "user", content = userMessage }
+                    }
+                    : new object[]
+                    {
+                        new { role = "system", content = guidance },
+                        new { role = "system", content = "KONTEXT:\n" + context },
+                        new { role = "user", content = userMessage }
+                    }
             };
 
             var json = JsonSerializer.Serialize(payload);

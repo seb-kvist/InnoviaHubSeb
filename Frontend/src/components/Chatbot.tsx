@@ -1,22 +1,19 @@
-// ChatbotWidget
-// Komponent för en flytande chattknapp och ett chatfönster i appen.
-// - Visar en launcher nere till höger som öppnar/stänger chatten
-// - Renderar användar- och bot‑meddelanden (vänster/höger)
-// - Anropar backend‑endpointen /api/chatbot/ask med frågan
-// - Auto‑scrollar ned till senaste meddelandet
-// - Styling ligger i ChatbotWidget.css
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
-import "./ChatbotWidget.css";
+import "../styles/Chatbot.css";
 
 type Message = { id: string; role: "user" | "assistant"; content: string; ts: string };
 
-const ChatbotWidget: React.FC = () => {
+const Chatbot: React.FC = () => {
+  // State för att visa eller gömma chatten
   const [open, setOpen] = useState<boolean>(false);
-  // Lokal UI‑state för chatt
-  const [messages, setMessages] = useState<Message[]>([]); // meddelandelista
-  const [input, setInput] = useState<string>(""); // inmatningstext
-  const [loading, setLoading] = useState<boolean>(false); // laddstatus när vi väntar på svar
+  // Lista över alla meddelanden i chatten
+  const [messages, setMessages] = useState<Message[]>([]); 
+  // Textfältets värde (inmatning från användaren)
+  const [input, setInput] = useState<string>(""); 
+  // Visar laddning när vi väntar på svar från backend
+  const [loading, setLoading] = useState<boolean>(false);
+  // Referens till chatlistan för att kunna auto-scrolla
   const listRef = useRef<HTMLDivElement | null>(null);
 
   // Axios‑instans mot backend API (baseras på VITE_API_URL)
@@ -29,6 +26,7 @@ const ChatbotWidget: React.FC = () => {
   const sendMessage = async () => {
     const trimmed = input.trim();
     if (!trimmed) return;
+    // Lägg till användarens meddelande direkt i listan
     const userMsg: Message = {
       id: crypto.randomUUID(),
       role: "user",
@@ -39,6 +37,7 @@ const ChatbotWidget: React.FC = () => {
     setInput("");
     setLoading(true);
     try {
+      // Skicka frågan till backend
       const res = await api.post("/chatbot/ask", { question: trimmed });
       const answer: string = res.data?.answer ?? "(no answer)";
       const botMsg: Message = {
@@ -48,7 +47,9 @@ const ChatbotWidget: React.FC = () => {
         ts: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
       setMessages((prev) => [...prev, botMsg]);
-    } catch (err: any) {
+    } 
+    // Visa felmeddelande om API-anropet misslyckas
+      catch (err: any) {
       const botMsg: Message = {
         id: crypto.randomUUID(),
         role: "assistant",
@@ -62,7 +63,7 @@ const ChatbotWidget: React.FC = () => {
     }
   };
 
-  // Auto‑scrolla ned till senaste meddelandet när listan uppdateras eller panelen öppnas
+  // Scrollar automatiskt ned till det senaste meddelandet när något nytt tillkommer
   useEffect(() => {
     const el = listRef.current;
     if (!el) return;
@@ -71,7 +72,7 @@ const ChatbotWidget: React.FC = () => {
 
   return (
     <>
-      {/* Floating Button + Hälsning */}
+      {/* Flytande knapp för att öppna/stänga chatten  + hälsning*/}
       {!open && (
         <div className="chatbot-greeting">Hej! Kan jag hjälpa dig?</div>
       )}
@@ -83,7 +84,7 @@ const ChatbotWidget: React.FC = () => {
         <img src="/img/robot.svg" className="chatbot-icon" alt="Chatbot" />
       </button>
 
-      {/* Chat Panel */}
+      {/* Chatpanel */}
       {open && (
         <div className="chatbot-panel">
           {/* Header */}
@@ -96,6 +97,7 @@ const ChatbotWidget: React.FC = () => {
             </div>
             <div className="chatbot-subtitle">Hur kan jag hjälpa dig?</div>
           </div>
+          {/* Meddelandelista */}
           <div className="chatbot-body" ref={listRef}>
             {messages.map((m) => (
               <div key={m.id} className={`chatbot-row ${m.role === "user" ? "user" : "bot"}`}>
@@ -109,6 +111,8 @@ const ChatbotWidget: React.FC = () => {
             ))}
             {loading && (<div className="chatbot-typing">Skriver…</div>)}
           </div>
+
+          {/* Inmatningsfält + skicka-knapp */}
           <div className="chatbot-input-row">
             <input
               value={input}
@@ -127,7 +131,6 @@ const ChatbotWidget: React.FC = () => {
               disabled={loading}
               className="chatbot-send"
             >
-              {/* paper-plane send icon */}
               <img src="/img/send.svg" className="send-icon" alt="send-icon" />
             </button>
           </div>
@@ -137,4 +140,4 @@ const ChatbotWidget: React.FC = () => {
   );
 };
 
-export default ChatbotWidget;
+export default Chatbot;

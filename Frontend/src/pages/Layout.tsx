@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import ChatbotWidget from "../components/chatbot/ChatbotWidget";
+import Chatbot from "../components/Chatbot";
 
 /**
  * Layout-komponenten fungerar som en "ram" för hela applikationen.
@@ -43,7 +43,7 @@ const Layout: React.FC = () => {
       </main>
       {/* Footer visas på alla sidor */}
       <Footer />
-      <ChatbotWidget />
+      <Chatbot />
     </>
   );
 };

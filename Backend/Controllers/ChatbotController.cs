@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Backend.Controllers
 {
+
+    //Controller för chatbot-apin. Skickar vidare frå¨n frontend till vår ChatbotService som pratar med OpenAi och våra rag-filer (vår kunskapsbas)
     [ApiController]
     [Route("api/[controller]")]
     public class ChatbotController : ControllerBase
@@ -14,7 +16,7 @@ namespace Backend.Controllers
             _chatbotService = chatbotService;
         }
 
-        // Enkla request/response‑typer för chat‑API:t
+        // Request/response-modeller för chat-API:t
         public record AskRequest(string question);
         public record AskResponse(string answer);
 

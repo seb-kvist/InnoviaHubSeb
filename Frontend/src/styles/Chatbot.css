@@ -11,13 +11,13 @@
 	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 	cursor: pointer;
 	z-index: 9999;
-	display: flex; /* centrera ikon/bild */
+	display: flex; 
 	align-items: center;
 	justify-content: center;
 }
 
 .chatbot-launcher:hover {
-	background: #6462f3;  /* ljusare teal/grön */
+	background: #6462f3;  
 	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
 	transition: background 120ms ease, box-shadow 120ms ease, transform 120ms ease;
 	transform: translateY(-1px);
@@ -25,12 +25,12 @@
 
 .chatbot-greeting {
 	position: fixed;
-	right: 84px; /* placerad till vänster om knappen */
+	right: 84px; 
 	bottom: 28px;
 	background: #ffffff;
 	color: #111827;
 	border: 1px solid #e5e7eb;
-	border-radius: 9999px; /* pillerform */
+	border-radius: 9999px; 
 	padding: 10px 14px;
 	box-shadow: 0 8px 20px rgba(0,0,0,0.12);
 	font-size: 14px;
@@ -61,24 +61,20 @@
 	padding: 18px 16px 14px 16px;
 	background: #5856d6;
 	color: #ffffff;
-	text-align: center; /* center title and subtitle */
+	text-align: center;
 }
 
 .chatbot-header-row {
 	display: flex;
 	align-items: center;
-	justify-content: center; /* centrera ikon + titel */
+	justify-content: center; 
 	gap: 12px;
 }
-
-/* avatar removed */
 
 .chatbot-header-left { display: flex; align-items: center; justify-content: center; gap: 10px; }
 .chatbot-header-icon { width: 24px; height: 24px; }
 .chatbot-title { font-size: 16px; font-weight: 800; }
 .chatbot-subtitle { font-size: 13px; opacity: 0.95; margin-top: 4px; text-align: center; }
-
-/* subtitle ersatt av header-right */
 
 .chatbot-body {
 	padding: 16px;
@@ -89,16 +85,13 @@
 	min-height: 220px;
 	max-height: 400px;
 	background: #f2f3f5;
-	/* Light scrollbars */
-	scrollbar-color: #e5e7eb #ffffff; /* thumb track for Firefox */
+	scrollbar-color: #e5e7eb #ffffff; 
 	scrollbar-width: thin;
 }
 .chatbot-typing {
 	color: #6b7280;
 	font-size: 12px;
 }
-
-/* WebKit-based browsers */
 .chatbot-body::-webkit-scrollbar {
 	width: 10px;
 }
@@ -117,32 +110,30 @@
 	width: 100%;
 }
 .chatbot-row.user {
-	justify-content: flex-start; /* användare vänster */
+	justify-content: flex-start; 
 }
 .chatbot-row.bot {
-	justify-content: flex-end; /* bot höger */
+	justify-content: flex-end; 
 }
 
 .chatbot-bubble {
 	padding: 12px 14px;
 	border-radius: 14px;
 	max-width: 85%;
-	display: inline-block; /* bubblan växer med innehållet */
+	display: inline-block; 
 	width: -moz-fit-content;
-	width: fit-content; /* inte större än nödvändigt */
+	width: fit-content; 
 	white-space: pre-wrap;
-	text-align: left; /* texten i bubblor ska alltid vara vänsterställd */
+	text-align: left; 
 }
 
 .chatbot-bubble.user {
-	/* placeras via .chatbot-row.user */
 	background: #ffffff;
 	color: #111827;
 	box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06) inset;
 }
 
 .chatbot-bubble.bot {
-	/* placeras via .chatbot-row.bot */
 	background: #14b8a6;
 	color: #ffffff;
 	box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
@@ -172,11 +163,11 @@
 	background: #f3f4f6;
 	border-radius: 20px;
 	padding: 12px 14px;
-	color: #111827; /* dark text */
+	color: #111827; 
 }
 
 .chatbot-input::placeholder {
-	color: #6b7280; /* placeholder gray */
+	color: #6b7280; 
 }
 
 .chatbot-input:focus {
@@ -230,3 +221,5 @@
 	.chatbot-panel { left: 14px; right: 14px; width: auto; bottom: 76px; max-height: 70vh; }
 	.chatbot-body { max-height: 52vh; }
 }
+
+
