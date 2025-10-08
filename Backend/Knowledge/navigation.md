@@ -1,10 +1,11 @@
 # Navigering i InnoviaHub
 
-- **Resources (Boka resurser)**  
-  - Här bokar du resurser som skrivbord, mötesrum och VR-headset.  
+- **Startsidan (Boka resurser)**  
+  - På startsidan hittar du resource-korten för att boka skrivbord, mötesrum, VR-headset och AI-server.  
 
 - **Profile (Mina bokningar)**  
   - Visar alla bokningar för den inloggade användaren.  
+  - Byta namn på användaren
   - Här kan du även avboka.  
 
 - **Admin (Administration)**  
@@ -13,6 +14,6 @@
 
 - **Login/Register (Inloggning och konto)**  
   - **Skapa konto (Register)**: Fyll i namn, e-postadress och lösenord på sidan **Register** → klicka på **Skapa konto**.  
-  - **Logga in (Login)**: Gå till sidan **Login**, skriv din e-post och lösenord → klicka på **Logga in**.  
+  - **Logga in (Login)**: Klicka på **Logga in**-knappen i headern. Skriv din e-post och lösenord → klicka på **Logga in**.  
   - När du är inloggad får du tillgång till **Profile**.  
   - Admin-användare loggar in på samma sätt men får även tillgång till **Admin**.  

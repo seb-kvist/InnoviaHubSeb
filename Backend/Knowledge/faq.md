@@ -6,6 +6,12 @@
 - **Hur loggar jag in?**  
   → Gå till sidan **Login**, ange din e-post och ditt lösenord, och klicka på **Logga in**.  
 
+- **Hur loggar jag ut?**  
+  → Klicka på **Logga ut**-knappen i headern (syns när du är inloggad).  
+
+- **Logga ut**  
+  → Klicka på **Logga ut**-knappen i headern (syns när du är inloggad).  
+
 - **Kan jag boka flera resurser samtidigt?**  
   → Ja, men varje resurs bokas separat.  
 

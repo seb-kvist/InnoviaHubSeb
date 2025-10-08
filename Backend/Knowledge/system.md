@@ -13,7 +13,7 @@
   - Frontend visar en chatt-widget.  
   - Backend har endpoint `/api/chatbot/ask`.  
   - Chatbot kan:  
-    - Ge navigeringsinstruktioner (ex. till Resources eller Profile).  
+    - Ge navigeringsinstruktioner (ex. till startsidan eller Profile).  
     - Hämta data från databasen (ex. dina bokningar).  
     - Utföra bokningsåtgärder (skapa eller avboka).  
     - Använda AI (OpenAI API via `.env`).  

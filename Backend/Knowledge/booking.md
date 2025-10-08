@@ -2,11 +2,10 @@
 
 - **Boka en resurs**  
   1. Logga in på ditt konto.  
-  2. Gå till **Resources**.  
-  3. Välj resurstyp (skrivbord, mötesrum eller VR-headset).  
-  4. Välj datum.  
-  5. Välj en ledig tidslucka.  
-  6. Klicka **Boka** för att bekräfta.  
+  2. På startsidan, tryck på ett av **resource-korten** (skrivbord, mötesrum, AI-server eller VR-headset).  
+  3. Välj datum.  
+  4. Välj en ledig tidslucka.  
+  5. Klicka **Boka** för att bekräfta.  
 
 - **Avboka en resurs**  
   1. Logga in på ditt konto.  

@@ -5,7 +5,7 @@
   - Kan registrera sig via **Register** om de saknar konto.  
   - Kan boka resurser.  
   - Kan se och avboka sina egna bokningar.  
-  - Har tillgång till sidorna **Resources** och **Profile**.  
+  - Har tillgång till startsidan (för bokning) och **Profile**.  
 
 - **Administratör (Admin)**  
   - Loggar in via samma **Login**-sida som vanliga användare.  

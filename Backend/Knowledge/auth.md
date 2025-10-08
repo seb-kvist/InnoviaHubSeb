@@ -7,9 +7,8 @@
   4. Ditt konto är nu registrerat och du kan logga in.
 
 - **Logga in (Login)**  
-  1. Gå till sidan **Login**.  
-  2. Ange din e-postadress och ditt lösenord.  
-  3. Klicka på **Logga in**.  
+  1. Klicka på **Logga in**-knappen i headern (syns när du är utloggad).  
+  2. Ange din e-postadress och ditt lösenord. 
   4. När du är inloggad kommer du åt dina bokningar via **Profile**.  
   5. Om du är administratör får du även tillgång till **Admin**.
 
@@ -19,5 +18,5 @@
   - Om du glömmer ditt lösenord kontaktar du systemadministratören (lösenordsåterställning hanteras ännu inte via appen).
 
 - **Utloggning**  
-  - Klicka på **Log out** (syns i menyn när du är inloggad).  
+  - Klicka på **Logga ut**-knappen i headern (syns när du är inloggad).  
   - Du blir utloggad och skickas tillbaka till startsidan.  
