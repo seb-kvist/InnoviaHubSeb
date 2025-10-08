@@ -21,7 +21,18 @@ using Backend.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Läs in miljövariabler från .env. Stöd både körning från projektroten och Backend‑mappen.
+// 1) Försök med aktuell arbetskatalog
 Env.Load();
+// 2) Testa Backend/.env om nyckeln inte hittas
+if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("OPENAI_API_KEY")))
+{
+    var backendEnvPath = Path.Combine(Directory.GetCurrentDirectory(), "Backend", ".env");
+    if (File.Exists(backendEnvPath))
+    {
+        Env.Load(backendEnvPath);
+    }
+}
 
 builder.Services.AddOpenApi();
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
@@ -61,6 +72,20 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
     options.UseMySql(cs, ServerVersion.AutoDetect(cs));
 });
+// Chatbot‑tjänster
+builder.Services.AddHttpClient("openai", client =>
+{
+    client.BaseAddress = new Uri("https://api.openai.com/");
+    var apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
+    if (!string.IsNullOrWhiteSpace(apiKey))
+    {
+        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", apiKey);
+    }
+    client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
+});
+// KnowledgeService läser .md‑filer; ChatbotService anropar OpenAI och injicerar KONTEXT
+builder.Services.AddSingleton<KnowledgeService>();
+builder.Services.AddSingleton<ChatbotService>();
 builder.Services.AddCors(options =>
     {
         options.AddPolicy("AllowReactApp", policy =>

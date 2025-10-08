@@ -1,6 +1,6 @@
 # Innovia Hub – Intranät och bokningssystem
 
-Detta repo innehåller projektarbetet för kursuppgiften **Innovia Hub**.
+Detta repo innehåller min version av projektarbetet **Innovia Hub**.
 
 ## Om uppgiften
 
@@ -10,6 +10,7 @@ För användaren
 - Medlemmar kan logga in och boka resurser i realtid, som skrivbord, mötesrum, VR-headsets och AI-servrar.
 - Systemet visar aktuellt tillgängliga tider och uppdateras automatiskt via SignalR när någon annan gör en bokning – användaren ser direkt om en tid blir upptagen.
 - En responsiv och enkel frontend gör att systemet kan användas på dator, surfplatta och mobil.
+- Chattbott som hjälper användaren med hur man kan använda appen
 
 För administratören
 - Administratörer har en egen panel där de kan hantera användare, resurser och bokningar.
@@ -38,13 +39,31 @@ Tekniska funktioner
 Krav på verktyg/versioner
 - **.NET SDK:** 9.0
 - **Node.js:** 18 eller 20 rekommenderas
-- **MySQL:** igång lokalt på `localhost:3307` (går att ändra i `Backend/appsettings.json`)
+- **MySQL:** igång lokalt på `localhost` (exemplet nedan visar port `3306` med `root`)
 
 Nedan följer en steg-för-steg guide för att köra projektet lokalt.
 
 ### 1. Backend
 
-Öppna en terminal i `Backend/` och kör:
+1) Skapa MySQL‑databas lokalt (exempel för port 3306 med root)
+```sql
+CREATE DATABASE innoviahub_seb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+2) Skapa `Backend/.env` – nedan är ett exempel så ändra för att matcha din lokala mysql databas + din API nyckel
+```env
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=...
+DB_NAME=...
+
+# OpenAI (för chatbotten)
+OPENAI_API_KEY=sk-...din-nyckel...
+```
+Notera: `.env` läses automatiskt av backend. Kör du från projektroten med `--project` fungerar det också.
+
+3) Installera och kör backend
 ```powershell
 cd Backend
 dotnet restore
@@ -54,15 +73,13 @@ dotnet run
 
 Backend startar på `http://localhost:5022` (API-bas: `http://localhost:5022/api`).
 
-Notera:
-- Projektet seedar data och en admin-användare vid första körningen (se `Services/DbSeeder.cs`).
-- Standard-admin skapas med: användarnamn `admin`, lösenord `Admin@123`, roll `admin`.
-- Du kan inte bli admin när du registrerar dig. För att logga in som admin, använd e-postadressen `admin@example.com` och lösenordordet `Admin@123`
-- SignalR hub körs på `/bookingHub`.
-- Databasanslutning styrs av `ConnectionStrings:DefaultConnection` i `Backend/appsettings.json`.
-  - Du kan byta port/användare/lösen här eller via user secrets/ miljövariabler.
+Övrigt
+- Projektet seedar data inkl. admin vid första körningen (se `Services/DbSeeder.cs`).
+- Standardadmin: e‑post `admin@example.com`, lösenord `Admin@123`, roll `admin`.
+- SignalR hub: `/bookingHub`.
+- Om du inte använder `.env`, kan du ändra connection string i `Backend/appsettings.json` under `ConnectionStrings:DefaultConnection`.
 
-### 2. Starta Frontend
+### 2. Frontend
 
 Frontend använder Vite och läser API-bas via `VITE_API_URL`.
 
@@ -86,9 +103,22 @@ Frontend startar på `http://localhost:5173`
 - `Backend/` – ASP.NET Core API, EF Core, Identity, SignalR
 - `Frontend/` – React + Vite, React Router, SignalR-klient
 
+## Chatbot (OpenAI + RAG)
+
+- API‑nyckel läses från `OPENAI_API_KEY` i `Backend/.env`.
+- Endpoint för frågor: `POST /api/chatbot/ask` med `{ "question": "..." }`.
+- Chatboten använder enkel RAG: läser markdown i `Backend/Knowledge/*.md` och skickar relevanta utdrag som kontext till modellen.
+
 ## Databasen
-- Starta MySQL lokalt och säkerställ att konfigurationen matchar `appsettings.json` (se ovan).
-- Databasen och seed-data skapas automatiskt första gången du kör backend.
+- Starta MySQL lokalt (port 3307 i exemplen). Vill du använda port 3306 – ändra `DB_PORT` i `.env` (eller connection string).
+- Databasen och seed‑data skapas automatiskt första gången du kör backend.
+
+Exempel på connection string om du vill använda `appsettings.json` istället för `.env` (matchar ovan):
+```json
+"ConnectionStrings": {
+  "DefaultConnection": "Server=127.0.0.1;Port=3306;Database=innoviahub_seb;User=root;Password=Toshiftw1338;TreatTinyAsBoolean=true"
+}
+```
 
 ---
 
@@ -101,3 +131,8 @@ Frontend startar på `http://localhost:5173`
 - Databasanslutning misslyckas:
   - Verifiera att MySQL kör på port `3307` eller uppdatera `appsettings.json` till din port.
   - Kontrollera användare/lösenord och att databasen finns/kan skapas.
+
+- Chatbot svarar inte / “OpenAI key missing”:
+  - Kontrollera att `OPENAI_API_KEY` finns i `Backend/.env`.
+  - Starta om backend efter att du lagt till nyckeln.
+
