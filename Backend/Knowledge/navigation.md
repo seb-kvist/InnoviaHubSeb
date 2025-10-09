@@ -12,7 +12,4 @@
   - Används för att hantera resurser och användare.  
 
 - **Login/Register (Inloggning och konto)**  
-  - **Skapa konto (Register)**: Fyll i namn, e-postadress och lösenord på sidan **Register** → klicka på **Skapa konto**.  
-  - **Logga in (Login)**: Gå till sidan **Login**, skriv din e-post och lösenord → klicka på **Logga in**.  
-  - När du är inloggad får du tillgång till **Profile**.  
-  - Admin-användare loggar in på samma sätt men får även tillgång till **Admin**.  
+  - För detaljerad information om inloggning och registrering, se **auth.md**.  

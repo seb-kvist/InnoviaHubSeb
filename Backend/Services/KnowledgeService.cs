@@ -23,16 +23,34 @@ namespace Backend.Services
             if (string.IsNullOrWhiteSpace(query)) return results;
 
             var queryLower = query.ToLowerInvariant();
+            
+            // Lägg till relaterade termer för bättre sökning
+            var searchTerms = new List<string> { queryLower };
+            if (queryLower.Contains("bokn") || queryLower.Contains("boka"))
+            {
+                searchTerms.AddRange(new[] { "boka", "bokning", "resource", "resurs", "kort" });
+            }
+            if (queryLower.Contains("logg") || queryLower.Contains("inlogg"))
+            {
+                searchTerms.AddRange(new[] { "login", "logga", "inloggning", "register" });
+            }
 
             foreach (var file in Directory.EnumerateFiles(_knowledgeRoot, "*.md", SearchOption.AllDirectories))
             {
                 var text = File.ReadAllText(file);
                 var lower = text.ToLowerInvariant();
-                var score = CountOccurrences(lower, queryLower);
-                if (score <= 0) continue;
+                var totalScore = 0;
+                
+                // Beräkna poäng för alla söktermer
+                foreach (var term in searchTerms)
+                {
+                    totalScore += CountOccurrences(lower, term);
+                }
+                
+                if (totalScore <= 0) continue;
 
                 var snippet = ExtractSnippet(text, queryLower);
-                results.Add((Path.GetFileName(file), snippet, score));
+                results.Add((Path.GetFileName(file), snippet, totalScore));
             }
 
             return results

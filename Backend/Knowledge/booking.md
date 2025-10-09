@@ -14,5 +14,4 @@
   4. Klicka **Avboka**.  
 
 - **Tips**  
-  - VR-headset bokas precis som andra resurser, under resurstyp **VR-headset**.  
   - Du kan ha flera bokningar, men varje bokas separat.  
