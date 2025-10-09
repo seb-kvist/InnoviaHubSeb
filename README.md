@@ -1,4 +1,4 @@
-# Innovia Hub – Intranät och bokningssystem
+# Innovia Hub - Intranät och bokningssystem
 
 Detta repo innehåller min version av projektarbetet **Innovia Hub**.
 
@@ -8,7 +8,7 @@ Innovia Hub är ett intranät och bokningssystem för coworkingcentret Innovia H
 
 För användaren
 - Medlemmar kan logga in och boka resurser i realtid, som skrivbord, mötesrum, VR-headsets och AI-servrar.
-- Systemet visar aktuellt tillgängliga tider och uppdateras automatiskt via SignalR när någon annan gör en bokning – användaren ser direkt om en tid blir upptagen.
+- Systemet visar aktuellt tillgängliga tider och uppdateras automatiskt via SignalR när någon annan gör en bokning - användaren ser direkt om en tid blir upptagen.
 - En responsiv och enkel frontend gör att systemet kan användas på dator, surfplatta och mobil.
 - Chattbott som hjälper användaren med hur man kan använda appen
 
@@ -50,16 +50,16 @@ Nedan följer en steg-för-steg guide för att köra projektet lokalt.
 CREATE DATABASE innoviahub_seb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-2) Skapa `Backend/.env` – nedan är ett exempel så ändra för att matcha din lokala mysql databas + din API nyckel
+2) Skapa `Backend/.env` - nedan är ett exempel så ändra för att matcha din lokala mysql databas + din API nyckel
 ```env
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_USER=root
-DB_PASSWORD=...
-DB_NAME=...
+DB_PASSWORD=dittlösenordhär
+DB_NAME=namnpådatabashär
 
 # OpenAI (för chatbotten)
-OPENAI_API_KEY=sk-...din-nyckel...
+OPENAI_API_KEY=...din api nyckel...
 ```
 Notera: `.env` läses automatiskt av backend. Kör du från projektroten med `--project` fungerar det också.
 
@@ -92,7 +92,6 @@ Backend startar på `http://localhost:5022` (API-bas: `http://localhost:5022/api
 - Projektet seedar data inkl. admin vid första körningen (se `Services/DbSeeder.cs`).
 - Standardadmin: e‑post `admin@example.com`, lösenord `Admin@123`, roll `admin`.
 - SignalR hub: `/bookingHub`.
-- Om du inte använder `.env`, kan du ändra connection string i `Backend/appsettings.json` under `ConnectionStrings:DefaultConnection`.
 
 ### 2. Frontend
 
