@@ -34,7 +34,7 @@ Tekniska funktioner
 
 ---
 
-## Kom igång – Installation (Backend + Frontend)
+## Kom igång – Installation (Databas + Backend + Frontend)
 
 Krav på verktyg/versioner
 - **.NET SDK:** 9.0
