@@ -16,7 +16,7 @@ const Chatbot: React.FC = () => {
   // Referens till chatlistan för att kunna auto-scrolla
   const listRef = useRef<HTMLDivElement | null>(null);
 
-  // Axios‑instans mot backend API (baseras på VITE_API_URL)
+  // Axios‑instans mot backend API
   const api = useMemo(() => {
     const base = import.meta.env.VITE_API_URL as string;
     return axios.create({ baseURL: base });

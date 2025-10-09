@@ -2,8 +2,7 @@ using System.Text;
 
 namespace Backend.Services
 {
-    /// Enkel, filbaserad RAG‑hjälptjänst som läser .MD filer från Backend/Knowledge och returnerar svar baserat på nyckelord 
-    /// som kan skickas med till modellen som kontext.
+    /// Filbaserad RAG som läser .MD filer från Backend/Knowledge och returnerar svar baserat på nyckelord som kan skickas med till modellen som kontext.
     public class KnowledgeService
     {
         private readonly string _knowledgeRoot;
@@ -17,8 +16,7 @@ namespace Backend.Services
             Directory.CreateDirectory(_knowledgeRoot);
         }
 
-        // Enkel sökning: letar efter hela frågesträngen (case-insensitive) i varje .md-fil. Beräknar poäng = antal förekomster av strängen.
-        // Returnerar toppträffar
+        // letar efter hela frågesträngen i varje .md-fil och som sedan beräknar poäng baserat antal förekomster av strängen. Returnerar toppträffar
         public IEnumerable<(string file, string snippet, int score)> Search(string query, int maxResults = 3)
         {
             var results = new List<(string file, string snippet, int score)>();

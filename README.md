@@ -63,7 +63,22 @@ OPENAI_API_KEY=sk-...din-nyckel...
 ```
 Notera: `.env` läses automatiskt av backend. Kör du från projektroten med `--project` fungerar det också.
 
-3) Installera och kör backend
+3) Initiera databasen (EF Core)
+```powershell
+# Kör från Backend-mappen
+cd Backend
+
+# Installera EF-verktyget
+dotnet tool install --global dotnet-ef
+
+# Första gången: om det INTE finns någon migrations-mapp, skapa en initial migration
+dotnet ef migrations add InitialCreate
+
+# Skapa/uppdatera databasen enligt migrations
+dotnet ef database update
+```
+
+4) Installera och kör backend
 ```powershell
 cd Backend
 dotnet restore
@@ -100,7 +115,7 @@ Frontend startar på `http://localhost:5173`
 ---
 
 ## Strukturen
-- `Backend/` – ASP.NET Core API, EF Core, Identity, SignalR
+- `Backend/` – ASP.NET Core API, EF Core, Identity, SignalR, OpenAI-API
 - `Frontend/` – React + Vite, React Router, SignalR-klient
 
 ## Chatbot (OpenAI + RAG)
@@ -110,29 +125,5 @@ Frontend startar på `http://localhost:5173`
 - Chatboten använder enkel RAG: läser markdown i `Backend/Knowledge/*.md` och skickar relevanta utdrag som kontext till modellen.
 
 ## Databasen
-- Starta MySQL lokalt (port 3307 i exemplen). Vill du använda port 3306 – ändra `DB_PORT` i `.env` (eller connection string).
+- Starta MySQL lokalt (port 3306 i exemplen).
 - Databasen och seed‑data skapas automatiskt första gången du kör backend.
-
-Exempel på connection string om du vill använda `appsettings.json` istället för `.env` (matchar ovan):
-```json
-"ConnectionStrings": {
-  "DefaultConnection": "Server=127.0.0.1;Port=3306;Database=innoviahub_seb;User=root;Password=Toshiftw1338;TreatTinyAsBoolean=true"
-}
-```
-
----
-
-## Felsökning
-
-- CORS-fel mellan frontend och backend:
-  - Kontrollera att backend tillåter anrop från `http://localhost:5173`.
-  - Säkerställ att `VITE_API_URL` pekar på rätt adress (`http://localhost:5022/api`).
-
-- Databasanslutning misslyckas:
-  - Verifiera att MySQL kör på port `3307` eller uppdatera `appsettings.json` till din port.
-  - Kontrollera användare/lösenord och att databasen finns/kan skapas.
-
-- Chatbot svarar inte / “OpenAI key missing”:
-  - Kontrollera att `OPENAI_API_KEY` finns i `Backend/.env`.
-  - Starta om backend efter att du lagt till nyckeln.
-
