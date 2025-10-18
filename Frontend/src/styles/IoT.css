@@ -1,0 +1,206 @@
+/* Container för hela IoT-sidan */
+.iot-container {
+  margin-top: 4rem;
+  color: #e9e5ef;
+  min-height: 100vh;
+  padding: 0 20px;
+}
+
+/* Header för IoT-sidan */
+.iot-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.iot-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: #e9e5ef;
+}
+
+.iot-header p {
+  font-size: 1.1rem;
+  color: #b8b3c0;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Grid för sensor-kort */
+.iot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Individuella sensor-kort */
+.sensor-card {
+  background: #f1eef4;
+  color: #333;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid #e0d6e8;
+}
+
+/* Hover-effekt för sensor-kort */
+.sensor-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* Header för sensor-kort */
+.sensor-card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+/* Ikon för sensor */
+.sensor-icon {
+  font-size: 2rem;
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #49AAB1;
+  border-radius: 50%;
+  color: white;
+}
+
+/* Titel för sensor */
+.sensor-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+/* Body för sensor-kort */
+.sensor-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Beskrivning av sensor */
+.sensor-description {
+  color: #666;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Plats-information */
+.sensor-location {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 0.5rem;
+  border-left: 3px solid #49AAB1;
+}
+
+.location-label {
+  font-weight: 600;
+  color: #555;
+}
+
+.location-value {
+  color: #49AAB1;
+  font-weight: 500;
+}
+
+/* Sensordata-sektion */
+.sensor-data {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 0.5rem;
+  border: 1px dashed #ccc;
+  text-align: center;
+}
+
+/* Placeholder för data */
+.data-placeholder {
+  color: #888;
+  font-style: italic;
+}
+
+/* Loading-indikator */
+.loading-indicator {
+  color: #49AAB1;
+  font-weight: 500;
+}
+
+/* Loading-sektion för hela sidan */
+.iot-loading {
+  text-align: center;
+  margin-top: 2rem;
+  color: #b8b3c0;
+}
+
+/* Responsiv design för mindre skärmar */
+@media screen and (max-width: 768px) {
+  .iot-container {
+    padding: 0 15px;
+  }
+  
+  .iot-header h1 {
+    font-size: 2rem;
+  }
+  
+  .iot-header p {
+    font-size: 1rem;
+  }
+  
+  .iot-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .sensor-card {
+    padding: 1rem;
+  }
+  
+  .sensor-card-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+  
+  .sensor-icon {
+    font-size: 1.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+  
+  .sensor-title {
+    font-size: 1.1rem;
+  }
+}
+
+/* Responsiv design för mycket små skärmar */
+@media screen and (max-width: 480px) {
+  .iot-container {
+    padding: 0 10px;
+  }
+  
+  .iot-header h1 {
+    font-size: 1.8rem;
+  }
+  
+  .sensor-card {
+    padding: 0.8rem;
+  }
+  
+  .sensor-location {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+  }
+}
