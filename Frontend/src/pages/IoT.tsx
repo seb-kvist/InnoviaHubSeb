@@ -1,214 +1,258 @@
+// src/pages/IoT.tsx
 import React, { useEffect, useState } from "react";
 import "../styles/IoT.css";
-import SensorCard from "../components/SensorCard";
+import * as signalR from "@microsoft/signalr";
 
-/**
- * IoT-sida för att visa sensorer och IoT-data från Innovia Hub
- * 
- * Denna sida visar olika typer av sensorer som:
- * - Temperatursensorer i mötesrum Alpha, Beta och Charlie
- * - CO2-sensorer i mötesrum Alpha, Beta och Charlie
- * - Luftfuktighetssensorer i mötesrum Alpha, Beta och Charlie
- * - Rörelsesensor i Lobby
- */
+// Interface för sensor-objekt som beskriver strukturen av sensordata
+interface Sensor {
+  id: string;
+  name: string;
+  type: string;
+  value: number | string;
+  unit?: string;
+  description?: string;
+}
+
+// API-konfiguration och konstanter
+const API_BASE = "http://localhost:5022/api/IoT";
+const HUB_URL = "http://localhost:5022/iothub";
+const TENANT_SLUG = "sebastians-hub"; // Måste matcha Backend: InnoviaIot:TenantSlug
 
 const IoT: React.FC = () => {
-  // State för att hantera vilka sensortyper som är expanderade
-  const [expandedTypes, setExpandedTypes] = useState<Set<string>>(new Set());
+  // State för att hantera sensordata, laddningsstatus och anslutningsstatus
+  const [sensors, setSensors] = useState<Sensor[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [connectionStatus, setConnectionStatus] = useState<string>("Disconnected");
+  // Alla kort visas alltid expanderade
 
-  // TODO: Implementera API-anrop när Sensor-API är tillgängligt
+  // Funktion för att hämta initial sensordata från backend API
+  const fetchData = async () => {
+    try {
+      // Hämta JWT från localStorage och skicka som Bearer
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE}/devices`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        credentials: "include",
+      });
+      if (!res.ok) {
+        throw new Error(`Device request failed with status ${res.status}`);
+      }
+
+      const devices = await res.json();
+      if (!Array.isArray(devices) || devices.length === 0) {
+        setSensors([]);
+        return;
+      }
+
+      // För varje enhet, hämta senaste mätvärde och skapa sensor-objekt
+      const deviceData = await Promise.all(
+        devices.map(async (device: any) => {
+          const latestRes = await fetch(`${API_BASE}/devices/${device.id}/latest`);
+          let latest: any = null;
+          if (latestRes.ok) {
+            try {
+              latest = await latestRes.json();
+            } catch (jsonErr) {
+              console.warn("Kunde inte tolka latest-respons:", jsonErr);
+            }
+          }
+
+          // Beräkna beskrivning som inte duplicerar namnet
+          const computedName = device.name || device.model || device.serial || "Okänd sensor";
+          const descCandidate = (device.description ?? device.model ?? device.serial ?? "").toString();
+          const description = descCandidate && descCandidate !== computedName ? descCandidate : "";
+
+          return {
+            id: device.id,
+            name: computedName,
+            type: latest?.type || "unknown",
+            value: latest?.value ?? "-",
+            unit:
+              latest?.type === "temperature"
+                ? "°C"
+                : latest?.type === "humidity"
+                ? "%"
+                : latest?.type === "co2"
+                ? "ppm"
+                : "",
+            description,
+          };
+        })
+      );
+
+      setSensors(deviceData);
+    } catch (err) {
+      console.error("Kunde inte hämta sensordata:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // useEffect som körs när komponenten mountas - sätter upp SignalR-anslutning och hämtar data
   useEffect(() => {
-    // Placeholder för framtida API-integration
-    // const fetchSensorData = async () => {
-    //   try {
-    //     const response = await fetch('/api/sensors');
-    //     const data = await response.json();
-    //     setSensorData(data);
-    //   } catch (error) {
-    //     console.error('Fel vid hämtning av sensordata:', error);
-    //   }
-    // };
-    // fetchSensorData();
+    fetchData();
+
+    // Skapa SignalR-anslutning till IoT-hubben
+    const token = localStorage.getItem("token");
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl(HUB_URL, {
+        accessTokenFactory: () => token || "",
+        withCredentials: true,
+      })
+      .withAutomaticReconnect()
+      .configureLogging(signalR.LogLevel.Information)
+      .build();
+
+    // Starta anslutning och gå med i tenant-grupp
+    connection
+      .start()
+      .then(async () => {
+        console.log("✅ Ansluten till IoTHub!");
+        setConnectionStatus("Connected");
+        try {
+          await connection.invoke("JoinTenant", TENANT_SLUG);
+          console.log(`👥 Joined tenant group: ${TENANT_SLUG}`);
+          setConnectionStatus(`Connected to ${TENANT_SLUG}`);
+        } catch (e) {
+          console.error("❌ Failed to join tenant group:", e);
+          setConnectionStatus("Connected (group join failed)");
+        }
+      })
+      .catch((err) => {
+        console.error("❌ Misslyckades ansluta till IoTHub:", err);
+        setConnectionStatus("Connection failed");
+      });
+
+    // Hantera anslutningsstatusändringar
+    connection.onclose(() => {
+      console.log("🔌 SignalR connection closed");
+      setConnectionStatus("Disconnected");
+    });
+
+    connection.onreconnecting(() => {
+      console.log("🔄 SignalR reconnecting...");
+      setConnectionStatus("Reconnecting...");
+    });
+
+    connection.onreconnected(() => {
+      console.log("✅ SignalR reconnected");
+      setConnectionStatus("Reconnected");
+      // Gå med i tenant-grupp igen efter återanslutning
+      connection.invoke("JoinTenant", TENANT_SLUG).catch(e => 
+        console.error("❌ Failed to rejoin tenant group:", e)
+      );
+    });
+
+    // Lyssna på nya mätningar från backend och uppdatera sensorvärden
+    connection.on("measurementReceived", (payload: any) => {
+      console.log("📡 Ny mätning:", payload);
+      console.log("🔍 Current sensors:", sensors.map(s => ({ id: s.id, name: s.name })));
+
+      setSensors((prevSensors) => {
+        console.log("🔄 Updating sensors, looking for deviceId:", payload.deviceId);
+        
+        const updated = prevSensors.map((s) => {
+          if (s.id === payload.deviceId) {
+            console.log("✅ Found matching sensor:", s.name, "updating with:", payload);
+            return {
+              ...s,
+              value: payload.value,
+              type: payload.type,
+              unit:
+                payload.type === "temperature"
+                  ? "°C"
+                  : payload.type === "humidity"
+                  ? "%"
+                  : payload.type === "co2"
+                  ? "ppm"
+                  : payload.type === "motion"
+                  ? ""
+                  : "",
+            };
+          }
+          return s;
+        });
+        
+        console.log("📊 Updated sensors:", updated.map(s => ({ id: s.id, name: s.name, value: s.value })));
+        return updated;
+      });
+    });
+
+    // Cleanup-funktion som stänger anslutningen när komponenten unmountas
+    return () => {
+      connection.stop();
+    };
   }, []);
 
-  // Funktion för att växla expanderad status för en sensortyp
-  const toggleExpanded = (type: string) => {
-    const newExpanded = new Set(expandedTypes);
-    if (newExpanded.has(type)) {
-      newExpanded.delete(type);
-    } else {
-      newExpanded.add(type);
-    }
-    setExpandedTypes(newExpanded);
-  };
+  // Enkel rollkontroll - samma som adminpanelen
+  const role = (typeof window !== "undefined" ? localStorage.getItem("role") : null) || "";
+  const isAdmin = role.toLowerCase() === "admin";
 
-  // Grupperade sensorer per typ
-  const sensorGroups = {
-    temperature: {
-      title: "Temperatursensorer",
-      description: "Övervakar temperatur i mötesrum",
-      icon: "🌡️",
-      sensors: [
-        {
-          id: "temp-roomalpha",
-          title: "Temp Mötesrum Alpha",
-          description: "Temperatursensor i mötesrum Alpha",
-          placeholder: "Data kommer från Sensor-API...",
-          deviceId: "device_id_temp_roomalpha",
-          model: "Toshi-Maestro-Temp-333",
-          serial: "toshi001"
-        },
-        {
-          id: "temp-roombeta",
-          title: "Temp Mötesrum Beta",
-          description: "Temperatursensor i mötesrum Beta",
-          placeholder: "Data kommer från Sensor-API...",
-          deviceId: "device_id_temp_roombeta",
-          model: "Toshi-Maestro-Temp-666",
-          serial: "toshi002"
-        },
-        {
-          id: "temp-roomcharlie",
-          title: "Temp Mötesrum Charlie",
-          description: "Temperatursensor i mötesrum Charlie",
-          placeholder: "Data kommer från Sensor-API...",
-          deviceId: "device_id_temp_roomcharlie",
-          model: "Toshi-Maestro-Temp-999",
-          serial: "toshi003"
-        }
-      ]
-    },
-    co2: {
-      title: "CO₂-sensorer",
-      description: "Övervakar CO2-nivåer i mötesrum",
-      icon: "💨",
-      sensors: [
-        {
-          id: "co2-roomalpha",
-          title: "CO₂ Mötesrum Alpha",
-          description: "CO2 sensor i mötesrum Alpha",
-          placeholder: "Data kommer från Sensor-API...",
-          deviceId: "device_id_co2_roomalpha",
-          model: "Toshi-Maestro-CO2-33",
-          serial: "toshi004"
-        },
-        {
-          id: "co2-roombeta",
-          title: "CO₂ Mötesrum Beta",
-          description: "CO2 sensor i mötesrum Beta",
-          placeholder: "Data kommer från Sensor-API...",
-          deviceId: "device_id_co2_roombeta",
-          model: "Toshi-Maestro-CO2-66",
-          serial: "toshi005"
-        },
-        {
-          id: "co2-roomcharlie",
-          title: "CO₂ Mötesrum Charlie",
-          description: "CO2 sensor i mötesrum Charlie",
-          placeholder: "Data kommer från Sensor-API...",
-          deviceId: "device_id_co2_roomcharlie",
-          model: "Toshi-Maestro-CO2-99",
-          serial: "toshi006"
-        }
-      ]
-    },
-    humidity: {
-      title: "Luftfuktighetssensorer",
-      description: "Övervakar luftfuktighet i mötesrum",
-      icon: "💧",
-      sensors: [
-        {
-          id: "humidity-roomalpha",
-          title: "Luftfuktighet Mötesrum Alpha",
-          description: "Luftfuktighetssensor i mötesrum Alpha",
-          placeholder: "Data kommer från Sensor-API...",
-          deviceId: "device_id_humidity_roomalpha",
-          model: "Toshi-Maestro-Humidity-3",
-          serial: "toshi007"
-        },
-        {
-          id: "humidity-roombeta",
-          title: "Luftfuktighet Mötesrum Beta",
-          description: "Luftfuktighetssensor i mötesrum Beta",
-          placeholder: "Data kommer från Sensor-API...",
-          deviceId: "device_id_humidity_roombeta",
-          model: "Toshi-Maestro-Humidity-6",
-          serial: "toshi008"
-        },
-        {
-          id: "humidity-roomcharlie",
-          title: "Luftfuktighet Mötesrum Charlie",
-          description: "Luftfuktighetssensor i mötesrum Charlie",
-          placeholder: "Data kommer från Sensor-API...",
-          deviceId: "device_id_humidity_roomcharlie",
-          model: "Toshi-Maestro-Humidity-9",
-          serial: "toshi009"
-        }
-      ]
-    },
-    motion: {
-      title: "Rörelsesensorer",
-      description: "Detekterar rörelse och aktivitet",
-      icon: "👥",
-      sensors: [
-        {
-          id: "motion-lobby",
-          title: "Rörelsesensor Lobby",
-          description: "Rörelsesensor i Lobby",
-          placeholder: "Data kommer från Sensor-API...",
-          deviceId: "device_id_motion_lobby",
-          model: "Ihsot-Maestro-Motion-1337",
-          serial: "toshi010"
-        }
-      ]
-    }
-  };
+  if (!isAdmin) {
+    return null; // Dölj sidan helt för icke-admin
+  }
 
+  if (loading) return <p>Laddar sensordata...</p>;
+
+  // Definiera sensor-typer som ska visas i kort
+  const types = [
+    { key: "temperature", title: "Temperature" },
+    { key: "co2", title: "CO₂" },
+    { key: "humidity", title: "Humidity" },
+    { key: "motion", title: "Motion" },
+  ] as const;
+
+  // Gruppera sensorer efter typ för att visa i rätt kort
+  const grouped: Record<string, Sensor[]> = sensors.reduce((acc, s) => {
+    const k = s.type || "unknown";
+    acc[k] = acc[k] || [];
+    acc[k].push(s);
+    return acc;
+  }, {} as Record<string, Sensor[]>);
+
+  // Rendera IoT-sidan med sensor-kort
   return (
-    <div className="iot-container">
-      <header className="iot-header">
-        <h1>IoT Dashboard</h1>
-        <p>Övervaka sensorer och IoT-enheter i Innovia Hub</p>
-      </header>
+    <div className="iot-page">
+      <h2>Sensorer</h2>
+      <div className="connection-status">
+        Status: {connectionStatus}
+      </div>
 
-      <div className="sensor-groups">
-        {Object.entries(sensorGroups).map(([type, group]) => (
-          <div key={type} className="sensor-group">
-            <div 
-              className="sensor-group-header"
-              onClick={() => toggleExpanded(type)}
-            >
-              <div className="sensor-group-title">
-                <h3>{group.title}</h3>
-              </div>
-              <div className="sensor-group-count">
-                {group.sensors.length} sensor{group.sensors.length !== 1 ? 'er' : ''}
-              </div>
-              <div className={`expand-icon ${expandedTypes.has(type) ? 'expanded' : ''}`}>
-                ▼
+      <div className="sensor-grid">
+        {types.map(t => (
+          <div key={t.key} className="sensor-type-card">
+            <div className="sensor-type-header">
+              <div className="sensor-type-header-content">
+                <div className="sensor-type-title-group">
+                  <h3 className="sensor-type-title">{t.title}</h3>
+                </div>
+                <span className="sensor-count">{grouped[t.key]?.length ?? 0} sensorer</span>
               </div>
             </div>
             
-            {expandedTypes.has(type) && (
-              <div className="sensor-group-content">
-                <p className="sensor-group-description">{group.description}</p>
-                <div className="sensor-list">
-                  {group.sensors.map((sensor) => (
-                    <SensorCard
-                      key={sensor.id}
-                      title={sensor.title}
-                      description={sensor.description}
-                      placeholder={sensor.placeholder}
-                      loading={false}
-                    />
-                  ))}
+            <div className="sensor-list">
+              {(grouped[t.key] ?? []).map(s => (
+                <div key={s.id} className="sensor-item">
+                  <div className="sensor-details">
+                    <div className="sensor-name">{s.name}</div>
+                    <div className="sensor-description">
+                      {s.description ? `${s.type} • ${s.description}` : s.type}
+                    </div>
+                  </div>
+                  <div className="sensor-value">
+                    {s.value}{typeof s.value === 'number' ? ` ${s.unit ?? ''}` : ''}
+                  </div>
                 </div>
-              </div>
-            )}
+              ))}
+              {(grouped[t.key]?.length ?? 0) === 0 && (
+                <div className="empty-state">
+                  Inga sensorer av typen {t.title}
+                </div>
+              )}
+            </div>
           </div>
         ))}
       </div>
-
     </div>
   );
 };
