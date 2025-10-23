@@ -60,7 +60,8 @@ git clone https://github.com/seb-kvist/InnoviaHubSeb.git
 git clone https://github.com/seb-kvist/innovia-iot.git
 ```
 
-### 2. 
+### 2. Starta IoT-plattformen (Innovia-IoT)
+
 Innan du startar backend måste alla IoT-API:er köras via Docker Compose.
 
 #### 2.1 Starta Docker Compose
@@ -119,7 +120,8 @@ cd InnoviaHubSeb/Backend
 CREATE DATABASE innoviahub_seb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-2) Skapa `Backend/.env` - nedan är ett exempel så ändra för att matcha din lokala mysql databas + din API nyckel
+#### 3.2 Skapa `Backend/.env`
+Nedan är ett exempel så ändra för att matcha din lokala mysql databas + din API nyckel
 ```env
 DB_HOST=127.0.0.1
 DB_PORT=3306
@@ -132,7 +134,7 @@ OPENAI_API_KEY=...din api nyckel...
 ```
 Notera: `.env` läses automatiskt av backend. Kör du från projektroten med `--project` fungerar det också.
 
-3) Initiera databasen (EF Core)
+#### 3.3 Initiera databasen (EF Core)
 ```powershell
 # Kör från Backend-mappen
 cd Backend
@@ -147,14 +149,9 @@ dotnet ef migrations add InitialCreate
 dotnet ef database update
 ```
 
-4) Installera Innovia-IoT 
-IoT‑checkpoint (innan du kör backend om du ska använda IoT‑sidan)
-- Om du tänker använda `/iot`‑sidan med realtidsdata: se till att du har startat Innovia‑IoT‑tjänsterna enligt `../IoT_INTEGRATION_GUIDE.md`.
-- Du behöver minst: DeviceRegistry (5101), Realtime.Hub (5103) och Ingest.Gateway (5102). Portal.Adapter (5104) används för historiska data.
-- **VIKTIGT**: Kör seed-scriptet i Innovia‑IoT först: `./scripts/seed-seb-data.ps1` (skapar tenant + devices)
-- Din app är redan konfigurerad med rätt TenantId och TenantSlug!
 
-4) Installera och kör backend
+
+#### 3.4 Installera och kör backend
 ```powershell
 cd Backend
 dotnet restore
@@ -164,25 +161,23 @@ dotnet run
 
 Backend startar på `http://localhost:5022` (API-bas: `http://localhost:5022/api`).
 
-IoT‑checkpoint (efter backend start)
+Övrigt (efter backend start)
 - I din backend finns en bakgrundstjänst som kopplar upp sig mot Realtime.Hub (5103) och vidarebefordrar mätningar till din lokala SignalR‑hub.
 - Om Realtime.Hub inte är igång kommer IoT‑sidan inte visa live‑uppdateringar.
-
-Övrigt
 - Projektet seedar data inkl. admin vid första körningen (se `Services/DbSeeder.cs`).
 - Standardadmin: e‑post `admin@example.com`, lösenord `Admin@123`, roll `admin`.
 - SignalR hub: `/bookingHub`.
 
-### 2. Frontend
+### 4. Frontend
 
 Frontend använder Vite och läser API-bas via `VITE_API_URL`.
 
-1. Skapa en .env i `Frontend` med:
+#### 4.1 Skapa en .env i `Frontend`
 ```env
 VITE_API_URL=http://localhost:5022/api
 ```
 
-Öppna en ny terminal i `Frontend/` och kör:
+#### 4.2 Öppna en ny terminal i `Frontend/` och kör:
 ```powershell
 cd Frontend
 npm install
@@ -193,7 +188,7 @@ Frontend startar på `http://localhost:5173`
 
 IoT‑checkpoint (innan du går till IoT‑sidan i frontend)
 - Navigationsknappen “IoT” syns endast för admin (rollen sätts i din app). Logga in som admin: `admin@example.com` / `Admin@123`.
-- Se till att följande Innovia‑IoT‑tjänster körs: 5101, 5102, 5103, 5104. Startordning och detaljer finns i `../IoT_INTEGRATION_GUIDE.md`.
+- Se till att följande Innovia‑IoT‑tjänster körs: 5101, 5102, 5103, 5104. 
 - Edge.Simulator kan köras för att skicka fejkade mätvärden var 10:e sekund.
 
 ---
