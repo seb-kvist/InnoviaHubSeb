@@ -149,8 +149,6 @@ dotnet ef migrations add InitialCreate
 dotnet ef database update
 ```
 
-
-
 #### 3.4 Installera och kör backend
 ```powershell
 cd Backend
@@ -160,6 +158,13 @@ dotnet run
 ```
 
 Backend startar på `http://localhost:5022` (API-bas: `http://localhost:5022/api`).
+
+#### 3.5 Klistra in ID från steg 2.2 i /Backend/appsettings.json
+
+```powershell
+# Byt ut ditt tenant ID nedan
+"TenantId": "X",
+```
 
 Övrigt (efter backend start)
 - I din backend finns en bakgrundstjänst som kopplar upp sig mot Realtime.Hub (5103) och vidarebefordrar mätningar till din lokala SignalR‑hub.
