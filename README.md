@@ -161,7 +161,7 @@ dotnet run
 Backend startar på `http://localhost:5022` (API-bas: `http://localhost:5022/api`).
 
 #### 3.5 Klistra in ID från steg 2.2 i /Backend/appsettings.json
-
+Under sektionen "InnoviaIot", byt ut "TenantId" till det du fick vid skapandet av tenant.
 ```powershell
 # Byt ut ditt tenant ID nedan
 "TenantId": "X",
