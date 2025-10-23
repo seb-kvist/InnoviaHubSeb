@@ -49,6 +49,7 @@ const Header: React.FC<HeaderProps> = ({ isLoggedIn, onLogout}) => {
         </>
       ) : (
         <>
+          {isAdmin && <Link to="/iot" className="btn-iot">IoT</Link>}
           <Link to="/profile" className="btn-profile">Min profil</Link>
           <button className="btn-logout" onClick={onLogout}>Logga ut</button>
         </>

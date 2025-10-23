@@ -61,6 +61,7 @@
 .btn-login,
 .btn-register,
 .btn-profile,
+.btn-iot,
 .btn-logout,
 .btn-back {
   border: 1px solid #6BDFCF;
@@ -70,6 +71,7 @@
 .btn-login:hover,
 .btn-register:hover,
 .btn-profile:hover,
+.btn-iot:hover,
 .btn-logout:hover,
 .btn-back:hover {
   background-color: #6BDFCF;

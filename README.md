@@ -36,6 +36,16 @@ Tekniska funktioner
 
 ## Kom igång – Installation (Databas + Backend + Frontend)
 
+OBS – IoT (Innovia‑IoT) förutsättningar
+- Den här README:n beskriver hur du startar din app (Backend + Frontend).
+- När du vill se IoT‑sidan med realtidsdata måste Innovia‑IoT‑tjänsterna vara igång (startas i det separata Innovia‑IoT‑projektet). Följ din IoT‑guide här: `../IoT_INTEGRATION_GUIDE.md`.
+- Snabb översikt över portar som ska vara igång när du använder IoT‑sidan:
+  - DeviceRegistry.Api: 5101
+  - Ingest.Gateway: 5102
+  - Realtime.Hub: 5103
+  - Portal.Adapter: 5104
+  - (Edge.Simulator: valfritt för test – publicerar MQTT var 10s)
+
 Krav på verktyg/versioner
 - **.NET SDK:** 9.0
 - **Node.js:** 18 eller 20 rekommenderas
@@ -78,6 +88,12 @@ dotnet ef migrations add InitialCreate
 dotnet ef database update
 ```
 
+IoT‑checkpoint (innan du kör backend om du ska använda IoT‑sidan)
+- Om du tänker använda `/iot`‑sidan med realtidsdata: se till att du har startat Innovia‑IoT‑tjänsterna enligt `../IoT_INTEGRATION_GUIDE.md`.
+- Du behöver minst: DeviceRegistry (5101), Realtime.Hub (5103) och Ingest.Gateway (5102). Portal.Adapter (5104) används för historiska data.
+- **VIKTIGT**: Kör seed-scriptet i Innovia‑IoT först: `./scripts/seed-seb-data.ps1` (skapar tenant + devices)
+- Din app är redan konfigurerad med rätt TenantId och TenantSlug!
+
 4) Installera och kör backend
 ```powershell
 cd Backend
@@ -87,6 +103,10 @@ dotnet run
 ```
 
 Backend startar på `http://localhost:5022` (API-bas: `http://localhost:5022/api`).
+
+IoT‑checkpoint (efter backend start)
+- I din backend finns en bakgrundstjänst som kopplar upp sig mot Realtime.Hub (5103) och vidarebefordrar mätningar till din lokala SignalR‑hub.
+- Om Realtime.Hub inte är igång kommer IoT‑sidan inte visa live‑uppdateringar.
 
 Övrigt
 - Projektet seedar data inkl. admin vid första körningen (se `Services/DbSeeder.cs`).
@@ -110,6 +130,11 @@ npm run dev
 ```
 
 Frontend startar på `http://localhost:5173` 
+
+IoT‑checkpoint (innan du går till IoT‑sidan i frontend)
+- Navigationsknappen “IoT” syns endast för admin (rollen sätts i din app). Logga in som admin: `admin@example.com` / `Admin@123`.
+- Se till att följande Innovia‑IoT‑tjänster körs: 5101, 5102, 5103, 5104. Startordning och detaljer finns i `../IoT_INTEGRATION_GUIDE.md`.
+- Edge.Simulator kan köras för att skicka fejkade mätvärden var 10:e sekund.
 
 ---
 

@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Data.Common;
 using System.Collections.Generic;
-
 using DotNetEnv;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
@@ -38,7 +37,10 @@ builder.Services.AddOpenApi();
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddControllers();
+builder.Services.Configure<InnoviaIoTOptions>(builder.Configuration.GetSection("InnoviaIot"));
+builder.Services.AddHttpClient<PortalAdapterService>();
 builder.Services.AddSignalR();
+builder.Services.AddHostedService<IoTRealtimeBridgeService>();
 
 
 builder.Services.AddIdentity<User, IdentityRole>(options =>
@@ -88,14 +90,11 @@ builder.Services.AddSingleton<KnowledgeService>();
 builder.Services.AddSingleton<ChatbotService>();
 builder.Services.AddCors(options =>
     {
-        options.AddPolicy("AllowReactApp", policy =>
-        {
-            policy.SetIsOriginAllowed(_ => true)
-             .AllowAnyHeader()
-             .AllowAnyMethod()
-             .AllowCredentials(); 
-        
-        });
+        options.AddPolicy("AllowReactApp", p =>
+        p.WithOrigins("http://localhost:5173", "http://127.0.0.1:5173")
+         .AllowAnyHeader()
+         .AllowAnyMethod()
+         .AllowCredentials());
     });
 
 builder.Services.AddScoped<JwtToken>();
@@ -160,5 +159,5 @@ app.UseAuthorization();
 app.UseStaticFiles();
 app.UseHttpsRedirection();
 app.MapHub<BookingHub>("/bookingHub");
-
+app.MapHub<IoTHub>("/iothub");
 app.Run();

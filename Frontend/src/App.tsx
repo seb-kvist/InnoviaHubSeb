@@ -6,6 +6,7 @@ import Booking from "./pages/Booking";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 import Resource from "./pages/Resource";
+import IoT from "./pages/IoT";
 import Layout from "./pages/Layout"; // "ram" med Header + Footer
 import Login from "./pages/Login";
 import ProtectedRoute from "./components/protectedRoute";
@@ -58,6 +59,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/iot"
+          element={
+            <ProtectedRoute>
+              <IoT />
             </ProtectedRoute>
           }
         />
