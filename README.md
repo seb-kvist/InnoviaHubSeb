@@ -36,9 +36,7 @@ Tekniska funktioner
 
 ## Kom igång – Installation (Databas + Backend + Frontend)
 
-OBS – IoT (Innovia‑IoT) förutsättningar
-- Den här README:n beskriver hur du startar din app (Backend + Frontend).
-- När du vill se IoT‑sidan med realtidsdata måste Innovia‑IoT‑tjänsterna vara igång (startas i det separata Innovia‑IoT‑projektet). Följ din IoT‑guide här: `../IoT_INTEGRATION_GUIDE.md`.
+- Den här README:n beskriver hur du startar din app (Backend + Frontend + IoT-API).
 - Snabb översikt över portar som ska vara igång när du använder IoT‑sidan:
   - DeviceRegistry.Api: 5101
   - Ingest.Gateway: 5102
@@ -53,8 +51,69 @@ Krav på verktyg/versioner
 
 Nedan följer en steg-för-steg guide för att köra projektet lokalt.
 
-### 1. Backend
+### 1. Klona projekten
+```sql
+# Klona backend/frontend-projektet (detta repo)
+git clone https://github.com/seb-kvist/InnoviaHubSeb.git
 
+# Klona IoT-plattformen
+git clone https://github.com/seb-kvist/innovia-iot.git
+```
+
+### 2. 
+Innan du startar backend måste alla IoT-API:er köras via Docker Compose.
+
+#### 2.1 Starta Docker Compose
+```sql
+cd innovia-iot/deploy
+docker compose up -d
+```
+#### 2.2 Starta upp API-tjänsterna i ordning
+```sql
+cd src/DeviceRegistry.Api && dotnet run
+cd src/Portal.Adapter   && dotnet run
+cd src/Realtime.Hub     && dotnet run
+cd src/Ingest.Gateway   && dotnet run
+
+# Vid test av simulera data till sensorer
+cd src/Edge.Simulator && dotnet run
+```
+
+#### 2.3 Seed Tenant & Devices
+När DeviceRegistry.Api är igång (port 5101), måste du skapa din tenant och sensorer.
+Det görs med script i innovia-iot/scripts/.
+
+Windows (PowerShell):
+```sql
+cd innovia-iot/scripts
+./seed-seb-data.ps1
+```
+MacOS/Linux:
+```sql
+cd innovia-iot/scripts
+chmod +x seed-seb-data.sh
+./seed-seb-data.sh
+
+# Om du får jq: command not found → kör brew install jq.
+```
+
+Exempel på lyckad output:
+```sql
+🌱 Seeding Sebastians Hub data...
+✅ Tenant skapad: c5ba0b5e-04a2-402a-97dd-c61e7bb9adc0
+📡 Skapar device: Toshi-Maestro-Temp-333 (toshi001)
+...
+✅ Klart! Tenant: sebastians-hub (c5ba0b5e-04a2-402a-97dd-c61e7bb9adc0)
+```
+OBS!!! Kopiera Tenant ID:t som du får ovan då det kommer användas i InnoviaHubSeb
+
+
+### 3. Backend (InnoviaHubSeb)
+```sql
+cd InnoviaHubSeb/Backend
+```
+
+#### 3.1
 1) Skapa MySQL‑databas lokalt (exempel för port 3306 med root)
 ```sql
 CREATE DATABASE innoviahub_seb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -88,6 +147,7 @@ dotnet ef migrations add InitialCreate
 dotnet ef database update
 ```
 
+4) Installera Innovia-IoT 
 IoT‑checkpoint (innan du kör backend om du ska använda IoT‑sidan)
 - Om du tänker använda `/iot`‑sidan med realtidsdata: se till att du har startat Innovia‑IoT‑tjänsterna enligt `../IoT_INTEGRATION_GUIDE.md`.
 - Du behöver minst: DeviceRegistry (5101), Realtime.Hub (5103) och Ingest.Gateway (5102). Portal.Adapter (5104) används för historiska data.
