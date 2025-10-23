@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import "../styles/IoT.css";
 import * as signalR from "@microsoft/signalr";
 
-// Interface för sensor-objekt som beskriver strukturen av sensordata
+// Interface för sensor-objekt som beskriver strukturen av sensorobjekten
 interface Sensor {
   id: string;
   name: string;
@@ -13,23 +13,22 @@ interface Sensor {
   description?: string;
 }
 
-// API-konfiguration och konstanter
+// API-konfiguration och konstanter som då måste matcha backend
 const API_BASE = "http://localhost:5022/api/IoT";
 const HUB_URL = "http://localhost:5022/iothub";
 const TENANT_SLUG = "sebastians-hub"; // Måste matcha Backend: InnoviaIot:TenantSlug
 
 const IoT: React.FC = () => {
-  // State för att hantera sensordata, laddningsstatus och anslutningsstatus
+  // State för att hantera sensordata, laddningsstatus och anslutningsstatus.
   const [sensors, setSensors] = useState<Sensor[]>([]);
   const [loading, setLoading] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState<string>("Disconnected");
-  // Alla kort visas alltid expanderade
 
-  // Funktion för att hämta initial sensordata från backend API
+  // Funktion för att hämta initial sensordata från backend API via api/iot/devices. För varje hämtar vi senaste mätning
   const fetchData = async () => {
     try {
-      // Hämta JWT från localStorage och skicka som Bearer
       const token = localStorage.getItem("token");
+      // Hämtar lista med devices från backend
       const res = await fetch(`${API_BASE}/devices`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         credentials: "include",
@@ -38,17 +37,19 @@ const IoT: React.FC = () => {
         throw new Error(`Device request failed with status ${res.status}`);
       }
 
+      //Om inga enheter hittas
       const devices = await res.json();
       if (!Array.isArray(devices) || devices.length === 0) {
         setSensors([]);
         return;
       }
 
-      // För varje enhet, hämta senaste mätvärde och skapa sensor-objekt
+      // SHämta senaste mätningen för varje enhet
       const deviceData = await Promise.all(
         devices.map(async (device: any) => {
           const latestRes = await fetch(`${API_BASE}/devices/${device.id}/latest`);
           let latest: any = null;
+
           if (latestRes.ok) {
             try {
               latest = await latestRes.json();
@@ -57,7 +58,7 @@ const IoT: React.FC = () => {
             }
           }
 
-          // Beräkna beskrivning som inte duplicerar namnet
+          // Bygger sensorobjekt
           const computedName = device.name || device.model || device.serial || "Okänd sensor";
           const descCandidate = (device.description ?? device.model ?? device.serial ?? "").toString();
           const description = descCandidate && descCandidate !== computedName ? descCandidate : "";
@@ -80,7 +81,7 @@ const IoT: React.FC = () => {
         })
       );
 
-      setSensors(deviceData);
+      setSensors(deviceData); //Sparar listna i state
     } catch (err) {
       console.error("Kunde inte hämta sensordata:", err);
     } finally {
@@ -88,7 +89,7 @@ const IoT: React.FC = () => {
     }
   };
 
-  // useEffect som körs när komponenten mountas - sätter upp SignalR-anslutning och hämtar data
+  // useEffect som körs när komponenten laddas in. Sätter upp SignalR-anslutning och hämtar data
   useEffect(() => {
     fetchData();
 
@@ -107,49 +108,49 @@ const IoT: React.FC = () => {
     connection
       .start()
       .then(async () => {
-        console.log("✅ Ansluten till IoTHub!");
+        console.log("Ansluten till IoTHub!");
         setConnectionStatus("Connected");
         try {
           await connection.invoke("JoinTenant", TENANT_SLUG);
-          console.log(`👥 Joined tenant group: ${TENANT_SLUG}`);
+          console.log(`Joined tenant group: ${TENANT_SLUG}`);
           setConnectionStatus(`Connected to ${TENANT_SLUG}`);
         } catch (e) {
-          console.error("❌ Failed to join tenant group:", e);
+          console.error("Failed to join tenant group:", e);
           setConnectionStatus("Connected (group join failed)");
         }
       })
       .catch((err) => {
-        console.error("❌ Misslyckades ansluta till IoTHub:", err);
+        console.error("Misslyckades ansluta till IoTHub:", err);
         setConnectionStatus("Connection failed");
       });
 
     // Hantera anslutningsstatusändringar
     connection.onclose(() => {
-      console.log("🔌 SignalR connection closed");
+      console.log("SignalR connection closed");
       setConnectionStatus("Disconnected");
     });
 
     connection.onreconnecting(() => {
-      console.log("🔄 SignalR reconnecting...");
+      console.log("SignalR reconnecting...");
       setConnectionStatus("Reconnecting...");
     });
 
     connection.onreconnected(() => {
-      console.log("✅ SignalR reconnected");
+      console.log("SignalR reconnected");
       setConnectionStatus("Reconnected");
       // Gå med i tenant-grupp igen efter återanslutning
       connection.invoke("JoinTenant", TENANT_SLUG).catch(e => 
-        console.error("❌ Failed to rejoin tenant group:", e)
+        console.error("Failed to rejoin tenant group:", e)
       );
     });
 
-    // Lyssna på nya mätningar från backend och uppdatera sensorvärden
+    // Körs varje gång backend ppushar ett nytt värde via IoThub. Här uppdateras rätt sensor i ui:t med nya värdet
     connection.on("measurementReceived", (payload: any) => {
-      console.log("📡 Ny mätning:", payload);
-      console.log("🔍 Current sensors:", sensors.map(s => ({ id: s.id, name: s.name })));
+      console.log("Ny mätning:", payload);
+      console.log("Current sensors:", sensors.map(s => ({ id: s.id, name: s.name })));
 
       setSensors((prevSensors) => {
-        console.log("🔄 Updating sensors, looking for deviceId:", payload.deviceId);
+        console.log("Updating sensors, looking for deviceId:", payload.deviceId);
         
         const updated = prevSensors.map((s) => {
           if (s.id === payload.deviceId) {
@@ -177,8 +178,6 @@ const IoT: React.FC = () => {
         return updated;
       });
     });
-
-    // Cleanup-funktion som stänger anslutningen när komponenten unmountas
     return () => {
       connection.stop();
     };
