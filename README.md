@@ -1,6 +1,7 @@
 # Innovia Hub - Intranät och bokningssystem
 
 Detta repo innehåller min version av projektarbetet **Innovia Hub**.
+Repot använder ett lokalt API och kräver att du även klonar ner Innovia-IoT repot här: https://github.com/seb-kvist/innovia-iot
 
 ## Om uppgiften
 
