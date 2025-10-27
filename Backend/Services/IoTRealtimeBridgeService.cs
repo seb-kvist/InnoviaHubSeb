@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace Backend.Services;
 
-// Configuration options shared by IoT services.
+//Klassen fungerar som en modell för konfigurationsinställningar. Dessa används av både PortalAdapterService och IoTRealtimeBridgeService.
 public class InnoviaIoTOptions
 {
     public string PortalAdapterBase { get; set; } = default!;
@@ -19,7 +19,8 @@ public class InnoviaIoTOptions
     public string TenantSlug { get; set; } = default!;
 }
 
-// BackgroundService that bridges Innovia IoT realtime updates into our own SignalR hub.
+// BackgroundService fungerar som en brygga mellan systemet som tar emot IoT-data (RealtimeHubBase) och vår egen
+// SignalR-hub (IoTHub) som frontend lyssnar på.Så fort en ny mätning kommer in, skickas den vidare direkt till alla webbläsare i rätt tenant.
 public class IoTRealtimeBridgeService : BackgroundService
 {
     private readonly IHubContext<IoTHub> _hubContext;
@@ -35,7 +36,9 @@ public class IoTRealtimeBridgeService : BackgroundService
         _opt = opt.Value;
         _logger = logger;
     }
-
+    // Metod: ExecuteAsync. 
+    // Skapar huvudloop för tjänsten och körs automatiskt när servern startas och körs så länge appen körs.  Skapa en SignalR-klient som kopplar upp sig mot den externa realtids-hubben (RealtimeHubBase) 
+    // och lyssnar efter inkommande mätdata ("measurementReceived"), som sedan skickar till frontenden via IoTHub
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var announcedOnline = false;
