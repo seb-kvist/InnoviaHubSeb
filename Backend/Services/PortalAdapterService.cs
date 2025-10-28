@@ -1,11 +1,14 @@
+using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.Http;
 using System.Net.Http.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Backend.Services;
-
 
 // Den här klassen ansvarar för all kommunikation mellan backend och Innovia Hub Portal API.
 // Hämtar en lista över registrerade IoT-enheter (GetDevicesAsync),hämtar alla mätvärden för en viss enhet (GetMeasurementsAsync)
@@ -27,7 +30,7 @@ public class PortalAdapterService
     // Hämtar alla IoT-enheter som tillhör den aktuella tenant:en. Endpoint som anropas: /api/tenants/{tenantId}/devices
     // och returnerar en lista med DeviceDto-objekt (enheter).
     public async Task<IReadOnlyList<DeviceDto>> GetDevicesAsync(CancellationToken cancellationToken = default)
-    {
+    { 
         // Skapar upp fullständig URL till Device Registry
         var url = $"{_opt.DeviceRegistryBase}/api/tenants/{_opt.TenantId}/devices";
 
@@ -43,19 +46,22 @@ public class PortalAdapterService
 
             // Kastar fel om statuskod inte är 200 OK
             response.EnsureSuccessStatusCode();
-
             // Läser in JSON och konveretar till en lista av DeviceDto
 
             var payload = await response.Content.ReadFromJsonAsync<List<DeviceDto>>(cancellationToken: cancellationToken);
-            return payload ?? new List<DeviceDto>(); // Returnerar listan eller en tom lista om payload = null
+            return payload ?? new List<DeviceDto>();
         }
-        catch (Exception ex)
-        {   // Loggar felet i serverkonsolen för felsökning
-            _logger.LogError(ex, "Failed to GET devices from {Url}", url);
-            throw;
+        catch (HttpRequestException ex)
+        {
+            _logger.LogWarning("Innovia IoT device registry is unreachable at {Url}. {Message}", url, ex.Message);
+            throw new InnoviaIoTOfflineException("Innovia IoT device registry is unreachable.", ex);
+        }
+        catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            _logger.LogWarning("Timeout while retrieving devices from {Url}.", url);
+            throw new InnoviaIoTOfflineException("Timed out while retrieving devices from Innovia IoT.", ex);
         }
     }
-
     // Metod: GetMeasurementsAsync()
     // Hämtar HTTP-svar med alla mätvärden för en specifik enhet. Endpoint: /portal/{tenantId}/devices/{deviceId}/measurements 
     // och returnerar: HttpResponseMessage för bättre felhhantering
@@ -64,28 +70,34 @@ public class PortalAdapterService
         var url = $"{_opt.PortalAdapterBase}/portal/{_opt.TenantId}/devices/{deviceId}/measurements";
         return _http.GetAsync(url, cancellationToken);
     }
-
-
     // Metod: GetMeasurementsAsync()
     // Hämtar mätvärden (temperatur, CO2, etc.) för en viss enhet och returnerar ett objekt av typen PortalMeassurementsEnvelope
     // Returnerar ett objekt av typen PortalMeasurementsEnvelope som som innehåller lista av MeasurementItem.
     public async Task<PortalMeasurementsEnvelope?> GetMeasurementsAsync(Guid deviceId, CancellationToken cancellationToken = default)
     {
-        using var response = await GetMeasurementsRawAsync(deviceId, cancellationToken);
-        // Om API:t returnerar 404 (Not Found) eller 400 (Bad Request), avbryt
-        if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.BadRequest)
+        try
         {
-            return null;
+            using var response = await GetMeasurementsRawAsync(deviceId, cancellationToken);
+            if (response.StatusCode == HttpStatusCode.NotFound || response.StatusCode == HttpStatusCode.BadRequest)
+            {
+                return null;
+            }
+
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<PortalMeasurementsEnvelope>(cancellationToken: cancellationToken);
         }
-
-        response.EnsureSuccessStatusCode();  // Läs in JSON-svaret och konvertera till PortalMeasurementsEnvelope
-
-        return await response.Content.ReadFromJsonAsync<PortalMeasurementsEnvelope>(cancellationToken: cancellationToken);
+        catch (HttpRequestException ex)
+        {
+            _logger.LogWarning("Innovia IoT portal adapter is unreachable for device {DeviceId}. {Message}", deviceId, ex.Message);
+            throw new InnoviaIoTOfflineException("Innovia IoT portal adapter is unreachable.", ex);
+        }
+        catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            _logger.LogWarning("Timeout while retrieving measurements for device {DeviceId}.", deviceId);
+            throw new InnoviaIoTOfflineException("Timed out while retrieving measurements from Innovia IoT.", ex);
+        }
     }
 
-
-    // Metod GetLatestMeasurementAsync()
-    // Hämtar endast den senaste mätningen från listan av mätvärden. Returnerar ett MeasurementItem-objekt.
     public async Task<MeasurementItem?> GetLatestMeasurementAsync(Guid deviceId, CancellationToken cancellationToken = default)
     {
         var envelope = await GetMeasurementsAsync(deviceId, cancellationToken);
@@ -98,16 +110,20 @@ public class PortalAdapterService
         // Returnerar den sista posten i listan (den senaste mätningen)
         return envelope.Measurements[^1];
     }
-
-
     //REcord represenderar data som tas emot från Portal.Adapter API. Matchar JSOn formatet som apiet levererar
     
     // En IoT-enhet (Device)
     public record DeviceDto(Guid Id, Guid TenantId, Guid? RoomId, string? Model, string? Serial, string Status);
-    
     // En enskild mätning (t.ex. temperatur, CO2)
     public record MeasurementItem(DateTimeOffset Time, string Type, double Value);
-    
     // En hel uppsättning mätningar för en enhet
     public record PortalMeasurementsEnvelope(Guid DeviceId, int Count, DateTimeOffset? From, DateTimeOffset? To, string? Type, List<MeasurementItem> Measurements);
+}
+
+public class InnoviaIoTOfflineException : Exception
+{
+    public InnoviaIoTOfflineException(string message, Exception innerException)
+        : base(message, innerException)
+    {
+    }
 }
