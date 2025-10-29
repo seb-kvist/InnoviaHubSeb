@@ -3,7 +3,7 @@ import "../styles/admin.css";
 import BookingsTab from "../components/BookingsTab";
 import UsersTab from "../components/UsersTab";
 import ResourcesTab from "../components/ResourcesTab";
-import { connection } from "../signalRConnection";
+import { getConnection } from "../signalRConnection";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -26,30 +26,27 @@ const Admin: React.FC<AdminProps> = ({ token }) => {
   }, []);
 
   useEffect(() => {
-    const handler = (update: any) => {
+    if (!token) return;
+    const conn = getConnection(token);
+    const bookingHandler = (update: any) => {
       toast.info(
         `en ${update.resourceName} har blivit bokad på ${update.date} under ${update.timeSlot}`
       );
       console.log(update);
     };
-    connection.on("ReceiveBookingUpdate", handler);
-    return () => {
-      connection.off("ReceiveBookingUpdate", handler);
-    };
-  }, []);
-
-  useEffect(() => {
-    const handler = (update: any) => {
+    const deleteHandler = (update: any) => {
       toast.info(
         `en ${update.resourceName} har blivit Avbokad på ${update.date} under ${update.timeSlot}`
       );
       console.log(update);
     };
-    connection.on("ReceiveDeleteBookingUpdate", handler);
+    conn.on("ReceiveBookingUpdate", bookingHandler);
+    conn.on("ReceiveDeleteBookingUpdate", deleteHandler);
     return () => {
-      connection.off("ReceiveDeleteBookingUpdate", handler);
+      conn.off("ReceiveBookingUpdate", bookingHandler);
+      conn.off("ReceiveDeleteBookingUpdate", deleteHandler);
     };
-  }, []);
+  }, [token]);
 
   if (!token) {
     return <div>Loading...</div>;

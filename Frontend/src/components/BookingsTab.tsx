@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { deleteBooking, getFilteredBookings } from "../api/api";
 import Calendar from "./Calendar";
-import { connection } from "../signalRConnection";
+import { getConnection } from "../signalRConnection";
 
 interface Booking {
   bookingId: number;
@@ -26,7 +26,8 @@ const BookingsTab: React.FC<Props> = ({ token }) => {
   selectedDateRef.current = selectedDate;
 
   //  fetch bookings for selected date
-  const fetchFilteredBookings = async () => {
+  const fetchFilteredBookings = useCallback(async () => {
+    if (!token) return;
     try {
       setLoading(true);
       const res = await getFilteredBookings(token, selectedDateRef.current);
@@ -36,37 +37,25 @@ const BookingsTab: React.FC<Props> = ({ token }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
-    fetchFilteredBookings();
-  }, [selectedDate, token]);
+    void fetchFilteredBookings();
+  }, [selectedDate, token, fetchFilteredBookings]);
 
-  //  setup SignalR once
   useEffect(() => {
-    const startConnection = async () => {
-      try {
-        if (connection.state === "Disconnected") {
-          await connection.start();
-          console.log("Connected to BookingHub");
-        }
-      } catch (err) {
-        console.error("SignalR error:", err);
-      }
-    };
-
-    startConnection();
-
+    if (!token) return;
+    const conn = getConnection(token);
     const updateHandler = () => {
-      getFilteredBookings(token, selectedDateRef.current).then(
-        setFilteredBookings
-      );
+      getFilteredBookings(token, selectedDateRef.current)
+        .then(setFilteredBookings)
+        .catch(() => setError("Kunde inte ladda bokningar"));
     };
 
-    connection.on("ReceiveBookingUpdate", updateHandler);
+    conn.on("ReceiveBookingUpdate", updateHandler);
 
     return () => {
-      connection.off("ReceiveBookingUpdate", updateHandler);
+      conn.off("ReceiveBookingUpdate", updateHandler);
     };
   }, [token]);
 

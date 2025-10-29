@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import type { FreeSlotsProps } from "../Interfaces/Props";
-import { getFreeSlots } from "../api/api";
 import { useNavigate } from "react-router-dom";
-import { connection } from "../signalRConnection";
+import { getFreeSlots } from "../api/api";
+import { getConnection } from "../signalRConnection";
 
 const FreeSlots = ({ resourceId, date }: FreeSlotsProps) => {
   const allSlots = ["08-10", "10-12", "12-14", "14-16", "16-18", "18-20"];
@@ -26,26 +26,30 @@ const FreeSlots = ({ resourceId, date }: FreeSlotsProps) => {
     } catch (error) {
       console.error("Kunde inte hämta slots", error);
     }
-  }, [normalizedDate, resourceId]);
+  }, [normalizedDate, resourceId, token]);
 
   // Fetch slots när komponenten mountas eller dependencies ändras
   useEffect(() => {
-    fetchSlots();
+    void fetchSlots();
   }, [fetchSlots]);
 
   // Lyssna på SignalR-uppdateringar och refetcha
   useEffect(() => {
+    if (!token) return;
+    const conn = getConnection(token);
     const handler = (update: { resourceId: number; isBookable: boolean }) => {
       setIsBookable(update.isBookable);
       console.log(update.isBookable);
     };
-    connection.on("ReceiveResourceStatusUpdate", handler);
+    conn.on("ReceiveResourceStatusUpdate", handler);
     return () => {
-      connection.off("ReceiveResourceStatusUpdate", handler);
+      conn.off("ReceiveResourceStatusUpdate", handler);
     };
-  }, [isBookable]);
+  }, [token]);
 
   useEffect(() => {
+    if (!token) return;
+    const conn = getConnection(token);
     const handler = (update: any) => {
       try {
         const updateDate = typeof update?.date === "string" ? update.date : "";
@@ -58,14 +62,14 @@ const FreeSlots = ({ resourceId, date }: FreeSlotsProps) => {
       } catch (err) {
         console.log(err);
       }
-      fetchSlots();
+      void fetchSlots();
     };
 
-    connection.on("ReceiveBookingUpdate", handler);
+    conn.on("ReceiveBookingUpdate", handler);
     return () => {
-      connection.off("ReceiveBookingUpdate", handler);
+      conn.off("ReceiveBookingUpdate", handler);
     };
-  }, [fetchSlots, normalizedDate]);
+  }, [fetchSlots, normalizedDate, token]);
 
    // Kontrollera om sloten är i framtiden
   const isFutureSlot = (slot: string) => {
