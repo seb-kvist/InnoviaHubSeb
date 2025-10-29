@@ -1,5 +1,5 @@
 import "./App.css";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useLocation } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import Admin from "./pages/Admin";
 import Booking from "./pages/Booking";
@@ -13,26 +13,20 @@ import ProtectedRoute from "./components/protectedRoute";
 import { useEffect, useState } from "react";
 
 function App() {
-  const [token, setToken] = useState<string | null>(null);
-  const [isTokenLoading, setIsTokenLoading] = useState(true);
+  const location = useLocation();
+  const [token, setToken] = useState<string | null>(() =>
+    localStorage.getItem("token")
+  );
+
   useEffect(() => {
-    const loadToken = async () => {
-      try {
-        const storedToken = localStorage.getItem("token");
-        if (storedToken) {
-          setToken(storedToken);
-        }
-      } catch (error) {
-        console.error("Error loading token:", error);
-        localStorage.removeItem("token");
-      }
-      setIsTokenLoading(false);
-    };
-    loadToken();
-  }, []);
-  if (isTokenLoading) {
-    return <div>Loading...</div>;
-  }
+    try {
+      setToken(localStorage.getItem("token"));
+    } catch (error) {
+      console.error("Error loading token:", error);
+      localStorage.removeItem("token");
+      setToken(null);
+    }
+  }, [location]);
 
   return (
     <Routes>
