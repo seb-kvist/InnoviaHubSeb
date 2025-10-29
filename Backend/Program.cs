@@ -91,7 +91,7 @@ builder.Services.AddSingleton<ChatbotService>();
 builder.Services.AddCors(options =>
     {
         options.AddPolicy("AllowReactApp", p =>
-        p.WithOrigins("http://localhost:5173", "http://127.0.0.1:5173", "https://innoviahubseb-frontend-ec6ny.ondigitalocean.app/")
+        p.WithOrigins("http://localhost:5173", "http://127.0.0.1:5173", "https://innoviahubseb-frontend-ec6ny.ondigitalocean.app")
          .AllowAnyHeader()
          .AllowAnyMethod()
          .AllowCredentials());
