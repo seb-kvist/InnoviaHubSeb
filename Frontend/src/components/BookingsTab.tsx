@@ -53,9 +53,11 @@ const BookingsTab: React.FC<Props> = ({ token }) => {
     };
 
     conn.on("ReceiveBookingUpdate", updateHandler);
+    conn.on("ReceiveDeleteBookingUpdate", updateHandler);
 
     return () => {
       conn.off("ReceiveBookingUpdate", updateHandler);
+      conn.off("ReceiveDeleteBookingUpdate", updateHandler);
     };
   }, [token]);
 

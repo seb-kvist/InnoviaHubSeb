@@ -1,11 +1,14 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FreeSlotsProps } from "../Interfaces/Props";
 import { useNavigate } from "react-router-dom";
 import { getFreeSlots } from "../api/api";
 import { getConnection } from "../signalRConnection";
 
 const FreeSlots = ({ resourceId, date }: FreeSlotsProps) => {
-  const allSlots = ["08-10", "10-12", "12-14", "14-16", "16-18", "18-20"];
+  const allSlots = useMemo(
+    () => ["08-10", "10-12", "12-14", "14-16", "16-18", "18-20"],
+    []
+  );
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
   const [isBookable, setIsBookable] = useState(true);
   const navigate = useNavigate();
@@ -70,6 +73,34 @@ const FreeSlots = ({ resourceId, date }: FreeSlotsProps) => {
       conn.off("ReceiveBookingUpdate", handler);
     };
   }, [fetchSlots, normalizedDate, token]);
+
+  useEffect(() => {
+    if (!token) return;
+    const conn = getConnection(token);
+    const handler = (update: any) => {
+      try {
+        const updateDate = typeof update?.date === "string" ? update.date : "";
+        const updateSlot = update?.timeSlot as string | undefined;
+
+        if (updateDate === normalizedDate && updateSlot) {
+          setAvailableSlots((prev) => {
+            if (prev.includes(updateSlot)) {
+              return prev;
+            }
+            return [...prev, updateSlot].sort((a, b) => allSlots.indexOf(a) - allSlots.indexOf(b));
+          });
+        }
+      } catch (err) {
+        console.error(err);
+      }
+      void fetchSlots();
+    };
+
+    conn.on("ReceiveDeleteBookingUpdate", handler);
+    return () => {
+      conn.off("ReceiveDeleteBookingUpdate", handler);
+    };
+  }, [allSlots, fetchSlots, normalizedDate, token]);
 
    // Kontrollera om sloten är i framtiden
   const isFutureSlot = (slot: string) => {
