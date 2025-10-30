@@ -3,6 +3,9 @@
 Detta repo innehåller min version av projektarbetet **Innovia Hub**.
 Repot använder ett lokalt API och kräver att du även klonar ner Innovia-IoT repot här: https://github.com/seb-kvist/innovia-iot
 
+Observera: main-grenen ska användas för lokal utveckling när du vill köra hela stacken (frontend + backend). Instruktionerna i denna README beskriver just den lokala miljön.
+Vill du testa den deployade versionen kan du besöka https://innoviahubseb-frontend-ec6ny.ondigitalocean.app/ (bygger på brancherna `frontend-only` och `backend-only`).
+
 ## Om uppgiften
 
 Innovia Hub är ett intranät och bokningssystem för coworkingcentret Innovia Hub. Systemet är byggt för att underlätta vardagen för både medlemmar och administratörer.
@@ -32,6 +35,11 @@ Tekniska funktioner
 - **Databas:** SQL (MySQL)
 - **Realtidskommunikation:** SignalR
 - **API (framtid):** Mockat sensor-API
+
+## Vidareutvecklade funktioner
+
+- IoT-översikt med 10 sensorer som visualiserar värden i realtid från Innovia IoT-plattformen.
+- Chatbot som använder OpenAI och RAG för att guida användare i hur appen fungerar.
 
 ---
 
