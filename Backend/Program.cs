@@ -20,6 +20,9 @@ using Backend.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
 // Läs in miljövariabler från .env. Stöd både körning från projektroten och Backend‑mappen.
 // 1) Försök med aktuell arbetskatalog
 Env.Load();
@@ -137,13 +140,23 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 var app = builder.Build();
+app.UseWebSockets(); // Aktiverar WebSocket-stöd
+
+// Försäkra att proxy (DigitalOcean) tillåter upgrade-headern
+app.Use(async (context, next) =>
+{
+    if (context.Request.Headers.ContainsKey("Upgrade"))
+        context.Response.Headers.Add("Connection", "Upgrade");
+    await next();
+});
+
 // Seed database
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    
+
     DbSeeder.Seed(db, userManager, roleManager).Wait();
 }
 if (app.Environment.IsDevelopment())
@@ -151,13 +164,17 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseCors("AllowReactApp");
 app.UseRouting();
-app.MapControllers();
+app.UseCors("AllowReactApp");
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseWebSockets();
 app.UseStaticFiles();
 app.UseHttpsRedirection();
+
+app.MapControllers();
 app.MapHub<BookingHub>("/bookingHub");
 app.MapHub<IoTHub>("/iothub");
+
 app.Run();
