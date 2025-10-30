@@ -1,6 +1,6 @@
 # Innovia Hub Backend
 
-> Den har grenen (`backend-only`) innehaller endast backend-projektet, tillhorande tester och verktyg. Frontend-koden ligger kvar i `main`-grenen.
+> Den har grenen (`backend-only`) ar dedikerad till backend-deployen pa DigitalOcean. For lokal utveckling eller fullstack-korning ska du i stallet klona `main`, dar bade backend och frontend finns samlat.
 
 ## Innehall
 - `Backend/`  ASP.NET Core API, EF Core, Identity, SignalR och tester
