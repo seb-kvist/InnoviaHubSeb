@@ -151,15 +151,15 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-// ✅ 1️⃣ Aktivera WebSocket-stöd direkt efter build()
+
+app.UseHttpsRedirection();
+
 app.UseWebSockets(new WebSocketOptions
 {
     KeepAliveInterval = TimeSpan.FromSeconds(120)
 });
 
-app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
 app.UseCors("AllowReactApp");
 
@@ -167,6 +167,14 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapHub<BookingHub>("/bookingHub");
+
+app.MapHub<BookingHub>("/bookingHub", options =>
+{
+    options.Transports =
+        Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets |
+        Microsoft.AspNetCore.Http.Connections.HttpTransportType.ServerSentEvents |
+        Microsoft.AspNetCore.Http.Connections.HttpTransportType.LongPolling;
+});
+
 app.MapHub<IoTHub>("/iothub");
 app.Run();
