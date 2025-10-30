@@ -1,10 +1,10 @@
-﻿# Innovia Hub Frontend
+# Innovia Hub Frontend
 
-> Den här grenen (`frontend-only`) innehåller endast frontend-projektet och dess hjälpfiler. Backend-koden finns kvar på grenen `main`.
+> Den här grenen (`frontend-only`) är avsedd för den fristående frontend-deployen på DigitalOcean. För lokal utveckling eller fullstack-körning ska du i stället klona `main`, där både frontend- och backend-koden finns samlad.
 
 ## Innehåll
-- `Frontend/` – Vite + React-app med alla komponenter, konfigurering och resurser
-- `.gitignore` – Ignorerar Node-moduler, build-artifakter m.m.
+- `Frontend/` - Vite + React-app med alla komponenter, konfigurering och resurser
+- `.gitignore` - Ignorerar Node-moduler, build-artifakter m.m.
 
 ## Förutsättningar
 - Node.js 18 eller 20
@@ -37,9 +37,9 @@
 
 ## Beroenden & skript
 `Frontend/package.json` innehåller samtliga npm-skript och beroenden. Vanliga skript:
-- `npm run dev` – Startar Vite-utvecklingsservern
-- `npm run build` – Bygger en produktionsbundle till `Frontend/dist`
-- `npm run lint` – (om konfigurerat) kör ESLint
+- `npm run dev` - Startar Vite-utvecklingsservern
+- `npm run build` - Bygger en produktionsbundle till `Frontend/dist`
+- `npm run lint` - (om konfigurerat) kör ESLint
 
 ## Övrigt
 - Bild- och stilfiler finns i `Frontend/public/` respektive `Frontend/src/styles/`.
