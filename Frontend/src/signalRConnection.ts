@@ -9,31 +9,27 @@ let connectionToken: string | null = null;
 async function startConnection(conn: signalR.HubConnection) {
   try {
     await conn.start();
-    console.log("Connected to BookingHub");
+    console.log("✅ Connected to BookingHub (SignalR)");
   } catch (error) {
-    console.error("SignalR connection error, retrying...", error);
-    setTimeout(() => {
-      void startConnection(conn);
-    }, 5000);
+    console.error("❌ SignalR connection failed, retrying in 3s...", error);
+    setTimeout(() => startConnection(conn), 3000);
   }
 }
 
 export function getConnection(token: string) {
-  if (!token) {
-    throw new Error("SignalR requires a token");
-  }
+  if (!token) throw new Error("SignalR requires a token");
 
   if (
     connection &&
     connectionToken === token &&
-    connection.state !== signalR.HubConnectionState.Disconnected
+    connection.state === signalR.HubConnectionState.Connected
   ) {
     return connection;
   }
 
-  if (connection && connection.state !== signalR.HubConnectionState.Disconnected) {
-    connection.stop().catch((err) =>
-      console.warn("Stopping previous SignalR connection failed:", err)
+  if (connection) {
+    connection.stop().catch(err =>
+      console.warn("Failed to stop previous SignalR connection:", err)
     );
   }
 
@@ -41,15 +37,13 @@ export function getConnection(token: string) {
   connection = new signalR.HubConnectionBuilder()
     .withUrl(hubUrl, {
       accessTokenFactory: () => token,
-      transport:
-        signalR.HttpTransportType.WebSockets |
-        signalR.HttpTransportType.ServerSentEvents |
-        signalR.HttpTransportType.LongPolling,
+      skipNegotiation: true, // ⚡ go straight to WebSockets
+      transport: signalR.HttpTransportType.WebSockets,
     })
-    .withAutomaticReconnect()
+    .withAutomaticReconnect([1000, 2000, 5000])
     .configureLogging(signalR.LogLevel.Information)
     .build();
 
-  void startConnection(connection);
+  startConnection(connection);
   return connection;
 }
