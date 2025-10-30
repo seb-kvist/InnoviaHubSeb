@@ -1,10 +1,13 @@
 import axios from "axios";
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+const API_BASE_URL = `${import.meta.env.VITE_API_URL}/api`;
+
 const api = axios.create({
   baseURL: API_BASE_URL,
+  withCredentials: true,
 });
 
-//AUTH - Register
+// AUTH - Register
 export const registerUser = async (
   email: string,
   password: string,
@@ -15,7 +18,7 @@ export const registerUser = async (
   return res.data;
 };
 
-//AUTH - Log in
+// AUTH - Log in
 export const loginUser = async (email: string, password: string) => {
   const res = await api.post("/auth/login", { email, password });
   console.log("API Response:", res.data);
@@ -24,14 +27,15 @@ export const loginUser = async (email: string, password: string) => {
   return res.data;
 };
 
-//BOOKING - Get all bookings
+// BOOKING - Get all bookings
 export const getAllBookings = async (token: string) => {
   const res = await api.get("/booking", {
     headers: { Authorization: `Bearer ${token}` },
   });
   return res.data;
 };
-// Booking Get filtered Bookings
+
+// BOOKING - Get filtered bookings
 export const getFilteredBookings = async (token: string, date: Date | null) => {
   const dateStr = date!.toISOString().slice(0, 10);
   const res = await api.get(`/booking/date?date=${dateStr}`, {
@@ -40,7 +44,8 @@ export const getFilteredBookings = async (token: string, date: Date | null) => {
 
   return res.data;
 };
-//BOOKING - Get a users booking
+
+// BOOKING - Get a user's bookings
 export const getUserBookings = async (userId: string, token: string) => {
   const res = await api.get(`/booking/user/${userId}`, {
     headers: {
@@ -50,7 +55,7 @@ export const getUserBookings = async (userId: string, token: string) => {
   return res.data;
 };
 
-//TIMESlOTS
+// TIMESLOTS
 export const getFreeSlots = async (
   date: string | Date,
   resourceTypeId: number,
@@ -67,7 +72,7 @@ export const getFreeSlots = async (
   }
 
   const payload = { date: formattedDate };
-  console.log("🚀 Sending payload to backend:", payload);
+  console.log("Sending payload to backend:", payload);
 
   const res = await api.post<string[]>(
     `/booking/${resourceTypeId}/freeSlots`, // match backend casing
@@ -78,7 +83,7 @@ export const getFreeSlots = async (
   return res.data;
 };
 
-//BOOKING - Create a booking
+// BOOKING - Create a booking
 export const createBooking = async (
   booking: {
     date: string;
@@ -89,12 +94,12 @@ export const createBooking = async (
   token: string
 ) => {
   const res = await api.post("/booking", booking, {
-    headers: { Authorization: `Bearer ${token} ` },
+    headers: { Authorization: `Bearer ${token}` },
   });
   return res.data;
 };
 
-//BOOKING - Remove a booking
+// BOOKING - Remove a booking
 export const deleteBooking = async (bookingId: number, token: string) => {
   const res = await api.delete(`/booking/${bookingId}`, {
     headers: {
@@ -104,7 +109,7 @@ export const deleteBooking = async (bookingId: number, token: string) => {
   return res.data;
 };
 
-//BOOKING - Change Resource Status
+// BOOKING - Change resource status
 export const changeResourceStatus = async (
   resourceId: number,
   token: string
@@ -118,22 +123,22 @@ export const changeResourceStatus = async (
   );
   return res.data;
 };
+
 export const getAllResources = async (token: string) => {
   const res = await api.get("/resource", {
     headers: { Authorization: `Bearer ${token}` },
   });
   return res.data;
 };
-export const getResourceById = async (token: string,id:number) => {
+
+export const getResourceById = async (token: string, id: number) => {
   const res = await api.get(`/resource/${id}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return res.data;
 };
 
-
-
-//USERS - Ge All Users
+// USERS - Get all users
 export const getAllUsers = async (
   token: string,
   filter?: { name?: string; email?: string }
@@ -148,7 +153,7 @@ export const getAllUsers = async (
   return res.data;
 };
 
-//USERS - Get specific user
+// USERS - Get specific user
 export const getUserById = async (id: string, token: string) => {
   const res = await api.get(`/users/${id}`, {
     headers: {
@@ -159,7 +164,7 @@ export const getUserById = async (id: string, token: string) => {
   return res.data;
 };
 
-//USERS - Update user
+// USERS - Update user
 export const updateUserById = async (
   id: string,
   token: string,
@@ -189,4 +194,5 @@ export const deleteUserById = async (id: string, token: string) => {
   return res.data;
 };
 
+export default api;
 

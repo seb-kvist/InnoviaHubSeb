@@ -1,7 +1,7 @@
 import * as signalR from "@microsoft/signalr";
 
 const apiBaseUrl = import.meta.env.VITE_API_URL ?? "";
-const hubUrl = `${apiBaseUrl.replace(/\/api$/, "")}/bookingHub`;
+const hubUrl = `${apiBaseUrl}/bookingHub`;
 
 let connection: signalR.HubConnection | null = null;
 let connectionToken: string | null = null;
@@ -9,9 +9,9 @@ let connectionToken: string | null = null;
 async function startConnection(conn: signalR.HubConnection) {
   try {
     await conn.start();
-    console.log("✅ Connected to BookingHub");
+    console.log("Connected to BookingHub");
   } catch (error) {
-    console.error("❌ SignalR connection error, retrying...", error);
+    console.error("SignalR connection error, retrying...", error);
     setTimeout(() => {
       void startConnection(conn);
     }, 5000);
@@ -41,8 +41,13 @@ export function getConnection(token: string) {
   connection = new signalR.HubConnectionBuilder()
     .withUrl(hubUrl, {
       accessTokenFactory: () => token,
+      transport:
+        signalR.HttpTransportType.WebSockets |
+        signalR.HttpTransportType.ServerSentEvents |
+        signalR.HttpTransportType.LongPolling,
     })
     .withAutomaticReconnect()
+    .configureLogging(signalR.LogLevel.Information)
     .build();
 
   void startConnection(connection);
