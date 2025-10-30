@@ -142,24 +142,40 @@ public class BookingController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteBooking(int id)
     {
-        var booking = await _context.Bookings.Include(b => b.Resource)
-       .FirstOrDefaultAsync(b => b.Id == id);
+        // Try to fetch the booking before deleting, so we can broadcast data
+        var booking = await _context.Bookings
+            .Include(b => b.Resource)
+            .FirstOrDefaultAsync(b => b.Id == id);
 
-        var deleteInfo =
-        new
+        if (booking == null)
+        {
+            // Return 204 (no content) instead of 404 if already deleted
+            return NoContent();
+        }
+
+        // Prepare info for realtime update before removing
+        var deleteInfo = new
         {
             date = booking.Date.ToString("yyyy-MM-dd"),
             timeSlot = booking.TimeSlot,
-            resourceName = booking.Resource!.ResourceName,
+            resourceName = booking.Resource?.ResourceName,
             userId = booking.UserId
         };
-        var success = await _bookingRepository.DeleteBooking(id);
-        if (!success) return NotFound();
 
-        //SignalR: meddela att bokningen tagits bort
+        // Try delete via repo
+        var deleted = await _bookingRepository.DeleteBooking(id);
+        if (!deleted)
+        {
+            // Still send event if repo silently failed (just in case)
+            await _hubContext.Clients.All.SendAsync("ReceiveDeleteBookingUpdate", deleteInfo);
+            return NoContent();
+        }
+
+        // Broadcast delete event to all clients
         await _hubContext.Clients.All.SendAsync("ReceiveDeleteBookingUpdate", deleteInfo);
         return NoContent();
     }
+
 
     //Hämta alla bokningar för en specifik resource
     [Authorize(Roles = "admin")]

@@ -166,7 +166,6 @@ app.UseCors("AllowReactApp");
 app.UseAuthentication();
 app.UseAuthorization();
 
-// ✅ 3️⃣ Map controllers och hubs
 app.MapControllers();
 app.MapHub<BookingHub>("/bookingHub");
 app.MapHub<IoTHub>("/iothub");
