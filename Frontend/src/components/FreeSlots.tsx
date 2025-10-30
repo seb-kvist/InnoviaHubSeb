@@ -75,30 +75,32 @@ const FreeSlots = ({ resourceId, date }: FreeSlotsProps) => {
   }, [fetchSlots, normalizedDate, token]);
 
   useEffect(() => {
-  if (!token) return;
-  const conn = getConnection(token);
-  const handler = (update: any) => {
-    try {
-      const updateDate = typeof update?.date === "string" ? update.date : "";
-      const updateSlot = update?.timeSlot as string | undefined;
+    if (!token) return;
+    const conn = getConnection(token);
+    const handler = (update: any) => {
+      try {
+        const updateDate = typeof update?.date === "string" ? update.date : "";
+        const updateSlot = update?.timeSlot as string | undefined;
 
-      if (updateDate === normalizedDate && updateSlot) {
-        // Lägg tillbaka sloten lokalt direkt (äkta realtid)
-        setAvailableSlots((prev) => {
-          if (prev.includes(updateSlot)) return prev;
-          return [...prev, updateSlot].sort(
-            (a, b) => allSlots.indexOf(a) - allSlots.indexOf(b)
-          );
-        });
+        if (updateDate === normalizedDate && updateSlot) {
+          setAvailableSlots((prev) => {
+            if (prev.includes(updateSlot)) {
+              return prev;
+            }
+            return [...prev, updateSlot].sort((a, b) => allSlots.indexOf(a) - allSlots.indexOf(b));
+          });
+        }
+      } catch (err) {
+        console.error(err);
       }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+      void fetchSlots();
+    };
 
-  conn.on("ReceiveDeleteBookingUpdate", handler);
-  return () => conn.off("ReceiveDeleteBookingUpdate", handler);
-}, [allSlots, normalizedDate, token]);
+    conn.on("ReceiveDeleteBookingUpdate", handler);
+    return () => {
+      conn.off("ReceiveDeleteBookingUpdate", handler);
+    };
+  }, [allSlots, fetchSlots, normalizedDate, token]);
 
    // Kontrollera om sloten är i framtiden
   const isFutureSlot = (slot: string) => {
