@@ -1,8 +1,15 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FreeSlotsProps } from "../Interfaces/Props";
 import { useNavigate } from "react-router-dom";
 import { getFreeSlots } from "../api/api";
 import { getConnection } from "../signalRConnection";
+import resourceData from "../data/resourceData";
+
+type BookingHubUpdate = {
+  date?: string;
+  timeSlot?: string;
+  resourceName?: string;
+};
 
 const FreeSlots = ({ resourceId, date }: FreeSlotsProps) => {
   const allSlots = useMemo(
@@ -13,30 +20,46 @@ const FreeSlots = ({ resourceId, date }: FreeSlotsProps) => {
   const [isBookable, setIsBookable] = useState(true);
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
+  const latestFetchId = useRef(0);
 
-  // Normalize date to YYYY-MM-DD once
+  const resourceTypeName = useMemo(
+    () => resourceData.find((r) => r.id === resourceId)?.name ?? "",
+    [resourceId]
+  );
+
   const normalizedDate =
     date instanceof Date
       ? date.toISOString().split("T")[0]
       : new Date(date).toISOString().split("T")[0];
 
-  // Hämta tillgängliga slots från API
+  const matchesCurrentResource = useCallback(
+    (resourceName?: string) => {
+      if (!resourceTypeName) return true;
+      return Boolean(
+        resourceName &&
+          resourceName.toLowerCase().startsWith(resourceTypeName.toLowerCase())
+      );
+    },
+    [resourceTypeName]
+  );
+
   const fetchSlots = useCallback(async () => {
     if (!token) return;
+    const requestId = ++latestFetchId.current;
     try {
       const slots = await getFreeSlots(normalizedDate, resourceId, token);
-      setAvailableSlots(slots);
+      if (requestId === latestFetchId.current) {
+        setAvailableSlots(slots);
+      }
     } catch (error) {
-      console.error("Kunde inte hämta slots", error);
+      console.error("Could not fetch slots", error);
     }
   }, [normalizedDate, resourceId, token]);
 
-  // Fetch slots när komponenten mountas eller dependencies ändras
   useEffect(() => {
     void fetchSlots();
   }, [fetchSlots]);
 
-  // Lyssna på SignalR-uppdateringar och refetcha
   useEffect(() => {
     if (!token) return;
     const conn = getConnection(token);
@@ -53,12 +76,15 @@ const FreeSlots = ({ resourceId, date }: FreeSlotsProps) => {
   useEffect(() => {
     if (!token) return;
     const conn = getConnection(token);
-    const handler = (update: any) => {
+    const handler = (update: BookingHubUpdate) => {
       try {
         const updateDate = typeof update?.date === "string" ? update.date : "";
         const updateSlot = update?.timeSlot as string | undefined;
-        
-        // Om samma datum → ta bort sloten direkt
+
+        if (!matchesCurrentResource(update.resourceName)) {
+          return;
+        }
+
         if (updateDate === normalizedDate && updateSlot) {
           setAvailableSlots((prev) => prev.filter((s) => s !== updateSlot));
         }
@@ -72,22 +98,28 @@ const FreeSlots = ({ resourceId, date }: FreeSlotsProps) => {
     return () => {
       conn.off("ReceiveBookingUpdate", handler);
     };
-  }, [fetchSlots, normalizedDate, token]);
+  }, [fetchSlots, matchesCurrentResource, normalizedDate, token]);
 
   useEffect(() => {
     if (!token) return;
     const conn = getConnection(token);
-    const handler = (update: any) => {
+    const handler = (update: BookingHubUpdate) => {
       try {
         const updateDate = typeof update?.date === "string" ? update.date : "";
         const updateSlot = update?.timeSlot as string | undefined;
+
+        if (!matchesCurrentResource(update.resourceName)) {
+          return;
+        }
 
         if (updateDate === normalizedDate && updateSlot) {
           setAvailableSlots((prev) => {
             if (prev.includes(updateSlot)) {
               return prev;
             }
-            return [...prev, updateSlot].sort((a, b) => allSlots.indexOf(a) - allSlots.indexOf(b));
+            return [...prev, updateSlot].sort(
+              (a, b) => allSlots.indexOf(a) - allSlots.indexOf(b)
+            );
           });
         }
       } catch (err) {
@@ -100,16 +132,13 @@ const FreeSlots = ({ resourceId, date }: FreeSlotsProps) => {
     return () => {
       conn.off("ReceiveDeleteBookingUpdate", handler);
     };
-  }, [allSlots, fetchSlots, normalizedDate, token]);
+  }, [allSlots, fetchSlots, matchesCurrentResource, normalizedDate, token]);
 
-   // Kontrollera om sloten är i framtiden
   const isFutureSlot = (slot: string) => {
     const [startHour, endHour] = slot.split("-").map(Number);
     const now = new Date();
     const today = new Date().toISOString().split("T")[0];
     if (normalizedDate !== today) return true;
-
-    // om datumet är idag jämför sluttiden
     return now.getHours() < endHour;
   };
 
@@ -126,7 +155,8 @@ const FreeSlots = ({ resourceId, date }: FreeSlotsProps) => {
             onClick={() =>
               canBook &&
               navigate(`/booking/${resourceId}/${normalizedDate}/${slot}`)
-            }>
+            }
+          >
             {slot}
           </div>
         );
@@ -136,3 +166,4 @@ const FreeSlots = ({ resourceId, date }: FreeSlotsProps) => {
 };
 
 export default FreeSlots;
+
