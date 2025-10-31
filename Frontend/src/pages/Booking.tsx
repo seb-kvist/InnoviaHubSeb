@@ -72,7 +72,7 @@ const Booking = () => {
     const handleBookingUpdate = (update: any) => {
       if (!matchesCurrentBooking(update)) return;
       setIsSlotAvailable(false);
-      setErrorMessage("Denna tid har precis bokats av någon annan.");
+      setErrorMessage("");
     };
 
     const handleDeleteUpdate = (update: any) => {
