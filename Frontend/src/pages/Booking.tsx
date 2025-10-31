@@ -3,7 +3,8 @@ import ResourceImgAndDate from "../components/ResourceImgAndDate";
 import resourceData from "../data/resourceData";
 import "../styles/Booking.css";
 import { useEffect, useState } from "react";
-import { createBooking } from "../api/api";
+import { createBooking, getFreeSlots } from "../api/api";
+import { getConnection } from "../signalRConnection";
 
 const Booking = () => {
   const { resourceId, date, slot } = useParams();
@@ -14,11 +15,88 @@ const Booking = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isSlotAvailable, setIsSlotAvailable] = useState(true);
   const navigate = useNavigate();
+  const normalizedDate = date
+    ? new Date(date).toISOString().slice(0, 10)
+    : "";
+
+  useEffect(() => {
+    if (!token || !resourceId || !slot || !normalizedDate) return;
+
+    const verifyAvailability = async () => {
+      try {
+        const slots = await getFreeSlots(
+          normalizedDate,
+          Number(resourceId),
+          token
+        );
+        const stillAvailable = slots.includes(slot);
+        setIsSlotAvailable(stillAvailable);
+        if (!stillAvailable) {
+          setErrorMessage("Denna tid är redan bokad. Välj en annan tid.");
+        }
+      } catch (err) {
+        console.error("Kunde inte verifiera slotens tillgänglighet", err);
+      }
+    };
+
+    void verifyAvailability();
+  }, [normalizedDate, resourceId, slot, token]);
+
+  useEffect(() => {
+    if (!token || !normalizedDate || !slot || !resourceId) return;
+    const conn = getConnection(token);
+
+    const matchesCurrentBooking = (update: any) => {
+      if (!update) return false;
+      const updateSlot =
+        typeof update.timeSlot === "string" ? update.timeSlot : "";
+      const updateDate = typeof update.date === "string" ? update.date : "";
+      const updateResourceName =
+        typeof update.resourceName === "string" ? update.resourceName : "";
+
+      const resourceNameMatches = resource?.name
+        ? updateResourceName.toLowerCase().startsWith(
+            resource.name.toLowerCase()
+          )
+        : true;
+
+      return (
+        updateSlot === slot &&
+        updateDate === normalizedDate &&
+        resourceNameMatches
+      );
+    };
+
+    const handleBookingUpdate = (update: any) => {
+      if (!matchesCurrentBooking(update)) return;
+      setIsSlotAvailable(false);
+      setErrorMessage("Denna tid har precis bokats av någon annan.");
+    };
+
+    const handleDeleteUpdate = (update: any) => {
+      if (!matchesCurrentBooking(update)) return;
+      setIsSlotAvailable(true);
+      setErrorMessage("");
+    };
+
+    conn.on("ReceiveBookingUpdate", handleBookingUpdate);
+    conn.on("ReceiveDeleteBookingUpdate", handleDeleteUpdate);
+
+    return () => {
+      conn.off("ReceiveBookingUpdate", handleBookingUpdate);
+      conn.off("ReceiveDeleteBookingUpdate", handleDeleteUpdate);
+    };
+  }, [normalizedDate, resource?.name, resourceId, slot, token]);
 
   // Funktion för att skapa bokning
   const completeReservation = async () => {
     if (!userId || !date || !slot || !resourceId || !token) {
+      return;
+    }
+    if (!isSlotAvailable) {
+      setErrorMessage("Denna tid är inte längre tillgänglig.");
       return;
     }
     setIsLoading(true);
@@ -47,6 +125,7 @@ const Booking = () => {
       navigate("/profile");
     } catch (error: any) {
       if (error?.response?.status === 409) {
+        setIsSlotAvailable(false);
         setErrorMessage("Denna tid är redan bokad. Välj en annan tid.");
       } else {
         setErrorMessage("Något gick fel vid bokningen. Försök igen.");
@@ -88,9 +167,13 @@ const Booking = () => {
           <button
             className=" formBtn reserveBtn"
             onClick={completeReservation}
-            disabled={isLoading}
+            disabled={isLoading || !isSlotAvailable}
           >
-            {isLoading ? "Reserverar..." : "Reservera"}
+            {isLoading
+              ? "Reserverar..."
+              : !isSlotAvailable
+              ? "Inte tillgänglig"
+              : "Reservera"}
           </button>
 
           {errorMessage && <p className="errorMessage">{errorMessage}</p>}
